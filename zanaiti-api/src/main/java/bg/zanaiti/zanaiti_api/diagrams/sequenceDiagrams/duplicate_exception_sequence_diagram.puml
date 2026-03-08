@@ -1,0 +1,17 @@
+@startuml
+actor Admin
+participant "AdminCraftController" as C
+participant "AdminCraftService" as S
+participant "CraftTranslationRepository" as TR
+participant "GlobalExceptionHandler" as G
+
+Admin -> C: POST /admin/crafts (with existing name)
+C -> S: createCraft(dto, adminId)
+S -> TR: existsByNameAndLanguageCode("Грънчарство", "bg")
+TR --> S: true (already exists)
+S -> S: throw DuplicateCraftException
+activate S #red
+S --> G: exception thrown
+G --> C: 409 Conflict
+C --> Admin: 409 Conflict + error message
+@enduml

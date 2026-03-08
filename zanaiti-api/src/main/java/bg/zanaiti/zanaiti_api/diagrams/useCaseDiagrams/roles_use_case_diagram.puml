@@ -1,0 +1,31 @@
+@startuml
+left to right direction
+
+actor "Гост" as Guest
+actor "Потребител" as User
+actor "Администратор" as Admin
+
+rectangle "Система" {
+  usecase "Регистрация" as UC1
+  usecase "Вход" as UC2
+  usecase "Разглеждане на занаяти" as UC3
+  usecase "Завършване на quiz" as UC4
+  usecase "Преглед на прогрес" as UC5
+  usecase "Управление на занаяти" as UC6
+  usecase "Управление на въпроси" as UC7
+  usecase "Управление на потребители" as UC8
+}
+
+Guest --> UC1
+Guest --> UC2
+Guest --> UC3
+
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+@enduml

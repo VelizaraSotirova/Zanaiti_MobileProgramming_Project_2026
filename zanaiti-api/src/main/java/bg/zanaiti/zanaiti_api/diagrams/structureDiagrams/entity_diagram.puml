@@ -1,0 +1,93 @@
+@startuml
+
+!define table(x) class x << (T,#FFAAAA) >>
+
+' Entity класове
+table(User) {
+  - id: Long
+  - username: String
+  - email: String
+  - password: String
+  - fullName: String
+  - totalPoints: int
+  - createdAt: LocalDateTime
+  - isActive: boolean
+  - profilePictureUrl: String
+}
+
+table(Craft) {
+  - id: Long
+  - imageUrl: String
+  - animationUrl: String
+  - latitude: Double
+  - longitude: Double
+  - isActive: boolean
+}
+
+table(CraftTranslation) {
+  - id: Long
+  - name: String
+  - description: String
+  - historicalFacts: String
+  - makingProcess: String
+}
+
+table(QuizQuestion) {
+  - id: Long
+  - correctOptionIndex: Integer
+  - pointsReward: Integer
+  - isActive: boolean
+}
+
+table(QuizQuestionTranslation) {
+  - id: Long
+  - questionText: String
+  - optionA: String
+  - optionB: String
+  - optionC: String
+  - optionD: String
+}
+
+table(UserProgress) {
+  - id: Long
+  - pointsEarned: int
+  - quizCompleted: boolean
+  - attemptCount: int
+  - lastInteractionDate: LocalDateTime
+  - quizCompletionDate: LocalDateTime
+  - quizScore: Integer
+}
+
+table(PointsHistory) {
+  - id: Long
+  - points: int
+  - source: String
+  - description: String
+  - createdAt: LocalDateTime
+}
+
+table(Role) {
+  - id: Long
+  - name: String
+  - description: String
+}
+
+table(Language) {
+  - id: Long
+  - code: String
+  - name: String
+  - isActive: boolean
+}
+
+' Връзки
+User "1" -- "*" UserProgress
+Craft "1" -- "*" UserProgress
+Craft "1" -- "*" CraftTranslation
+Craft "1" -- "*" QuizQuestion
+QuizQuestion "1" -- "*" QuizQuestionTranslation
+User "*" -- "*" Role
+UserProgress "*" -- "1" Language
+PointsHistory "*" -- "1" User
+PointsHistory "*" -- "0..1" Craft
+
+@enduml

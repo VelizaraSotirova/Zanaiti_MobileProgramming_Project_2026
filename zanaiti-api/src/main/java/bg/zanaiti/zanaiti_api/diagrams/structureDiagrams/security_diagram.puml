@@ -1,0 +1,42 @@
+@startuml
+
+' Security класове
+class CustomUserDetails {
+  - user: User
+  + getAuthorities(): Collection
+  + getPassword(): String
+  + getUsername(): String
+  + isEnabled(): boolean
+  + getUser(): User
+}
+
+class JwtService {
+  - secretKey: String
+  - jwtExpiration: long
+  + generateToken(UserDetails): String
+  + validateToken(String): boolean
+  + extractUsername(String): String
+}
+
+class JwtAuthenticationFilter {
+  - jwtService: JwtService
+  - userDetailsService: UserDetailsService
+  + doFilterInternal(request, response, filterChain)
+}
+
+class JwtAuthenticationEntryPoint {
+  + commence(request, response, authException)
+}
+
+class CustomUserDetailsService {
+  - userRepository: UserRepository
+  + loadUserByUsername(String): UserDetails
+}
+
+' Връзки
+CustomUserDetailsService ..> CustomUserDetails : creates
+JwtAuthenticationFilter --> JwtService : uses
+JwtAuthenticationFilter --> CustomUserDetailsService : uses
+CustomUserDetails --> User : contains
+
+@enduml

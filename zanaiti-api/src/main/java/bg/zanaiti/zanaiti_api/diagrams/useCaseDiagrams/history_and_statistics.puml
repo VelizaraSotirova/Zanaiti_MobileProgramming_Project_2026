@@ -1,0 +1,19 @@
+@startuml
+actor "Потребител" as User
+actor "Администратор" as Admin
+
+rectangle "История и статистика" {
+  usecase "Преглед на лична история" as UC1
+  usecase "Преглед на точки по занаяти" as UC2
+  usecase "Преглед на класация" as UC3
+  usecase "Преглед на системна статистика" as UC4
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+
+Admin --> UC4
+
+note right of UC4 : Брой потребители,\nброй занаяти, активност
+@enduml

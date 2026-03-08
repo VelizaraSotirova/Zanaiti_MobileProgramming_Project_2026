@@ -1,0 +1,23 @@
+@startuml
+actor User
+participant "AuthController" as C
+participant "AuthService" as S
+participant "UserService" as US
+participant "UserRepository" as R
+participant "JwtService" as J
+
+User -> C: POST /api/auth/register
+C -> S: register(userData)
+S -> US: createUser(userData)
+US -> R: existsByUsername()
+R --> US: false
+US -> R: existsByEmail()
+R --> US: false
+US -> R: save(new User)
+R --> US: saved User
+US --> S: UserDto
+S -> J: generateToken(userDetails)
+J --> S: JWT token
+S --> C: LoginResponse
+C --> User: 201 Created + token
+@enduml

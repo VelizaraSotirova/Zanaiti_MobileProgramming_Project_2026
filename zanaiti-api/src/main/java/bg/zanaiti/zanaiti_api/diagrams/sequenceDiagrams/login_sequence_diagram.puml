@@ -1,0 +1,19 @@
+@startuml
+actor User
+participant "AuthController" as C
+participant "AuthService" as S
+participant "AuthenticationManager" as AM
+participant "JwtService" as J
+participant "UserRepository" as R
+
+User -> C: POST /api/auth/login
+C -> S: login(request)
+S -> AM: authenticate(token)
+AM -> R: loadUserByUsername(username)
+R --> AM: UserDetails
+AM --> S: Authentication
+S -> J: generateToken(userDetails)
+J --> S: JWT token
+S --> C: LoginResponse
+C --> User: 200 OK + token
+@enduml

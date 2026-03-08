@@ -1,0 +1,25 @@
+@startuml
+actor User
+participant "UserProgressController" as C
+participant "UserProgressService" as S
+participant "QuizQuestionRepository" as QR
+participant "UserProgressRepository" as PR
+participant "UserRepository" as UR
+participant "PointsHistoryRepository" as HR
+
+User -> C: POST /progress/me/craft/1/complete-quiz?answers=5
+C -> S: completeQuiz(userId, craftId, 5, "bg")
+S -> PR: findByUserIdAndCraftId()
+PR --> S: UserProgress (or null)
+S -> QR: findByCraftIdAndIsActiveTrue(1)
+QR --> S: List<QuizQuestion>
+S -> S: calculatePoints(5 * 10 = 50)
+S -> PR: save(updated Progress)
+PR --> S: saved Progress
+S -> UR: updateUserTotalPoints(+50)
+UR --> S: updated User
+S -> HR: save(PointsHistory)
+HR --> S: saved History
+S --> C: UserProgressDto
+C --> User: 200 OK + updated progress
+@enduml

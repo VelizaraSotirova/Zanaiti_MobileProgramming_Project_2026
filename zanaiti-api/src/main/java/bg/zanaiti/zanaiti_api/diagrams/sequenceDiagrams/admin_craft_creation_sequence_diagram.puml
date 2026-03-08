@@ -1,0 +1,23 @@
+@startuml
+actor Admin
+participant "AdminCraftController" as C
+participant "AdminCraftService" as S
+participant "CraftTranslationRepository" as TR
+participant "CraftRepository" as CR
+participant "LanguageRepository" as LR
+
+Admin -> C: POST /admin/crafts
+C -> S: createCraft(dto, adminId)
+S -> TR: existsByNameAndLanguageCode("Ковачество", "bg")
+TR --> S: false (not exists)
+S -> CR: save(new Craft)
+CR --> S: saved Craft
+S -> LR: findByCode("bg")
+LR --> S: Language
+S -> TR: save(bg translation)
+S -> LR: findByCode("en")
+LR --> S: Language
+S -> TR: save(en translation)
+S --> C: CraftDto
+C --> Admin: 201 Created + new craft
+@enduml

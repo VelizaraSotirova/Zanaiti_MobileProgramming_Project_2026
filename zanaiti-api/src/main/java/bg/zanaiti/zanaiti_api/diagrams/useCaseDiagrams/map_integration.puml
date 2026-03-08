@@ -1,0 +1,29 @@
+@startuml
+actor "Потребител" as User
+actor "Гост" as Guest
+
+rectangle "Карта с ART" {
+  usecase "Разглеждане на картата" as UC1
+  usecase "Приближаване/отдалечаване" as UC2
+  usecase "Избор на маркер за занаят" as UC3
+  usecase "Преглед на детайли за занаят" as UC4
+  usecase "Търсене в радиус" as UC5
+  usecase "Стартиране на AR изживяване" as UC6
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+
+Guest --> UC1
+Guest --> UC2
+Guest --> UC3
+Guest --> UC4
+Guest --> UC5
+Guest --> UC6
+
+note right of UC6 : Сканира изделие с камера\nи визуализира анимация
+@enduml

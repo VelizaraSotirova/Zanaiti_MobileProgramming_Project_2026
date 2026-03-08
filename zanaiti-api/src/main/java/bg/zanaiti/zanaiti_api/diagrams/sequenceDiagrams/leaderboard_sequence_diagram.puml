@@ -1,0 +1,14 @@
+@startuml
+actor User
+participant "UserProgressController" as C
+participant "UserProgressService" as S
+participant "UserProgressRepository" as R
+
+User -> C: GET /progress/leaderboard
+C -> S: getLeaderboard()
+S -> R: getLeaderboard() [custom query]
+R --> S: List<Object[]> (userId, username, totalPoints)
+S -> S: convert to LeaderboardEntryDto
+S --> C: List<LeaderboardEntryDto>
+C --> User: 200 OK + leaderboard
+@enduml
