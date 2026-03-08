@@ -2,6 +2,7 @@ package bg.zanaiti.zanaiti_api.service.publics;
 
 import bg.zanaiti.zanaiti_api.dto.Craft.CraftDto;
 import bg.zanaiti.zanaiti_api.dto.Craft.CraftTranslationDto;
+import bg.zanaiti.zanaiti_api.exceptionHandlers.CraftNotFoundException;
 import bg.zanaiti.zanaiti_api.model.Craft;
 import bg.zanaiti.zanaiti_api.model.CraftTranslation;
 import bg.zanaiti.zanaiti_api.repository.CraftRepository;
@@ -30,13 +31,13 @@ public class PublicCraftService {
 
     public CraftDto getCraftById(Long id) {
         Craft craft = craftRepository.findByIdAndIsActiveTrue(id)
-                .orElseThrow(() -> new RuntimeException("Craft not found or not active"));
+                .orElseThrow(() -> new CraftNotFoundException("Craft not found or not active"));
         return mapToDto(craft);
     }
 
     public CraftDto getCraftByIdAndLanguage(Long id, String languageCode) {
         Craft craft = craftRepository.findByIdAndIsActiveTrue(id)
-                .orElseThrow(() -> new RuntimeException("Craft not found or not active"));
+                .orElseThrow(() -> new CraftNotFoundException("Craft not found or not active"));
 
         CraftDto dto = mapToBasicDto(craft);
 

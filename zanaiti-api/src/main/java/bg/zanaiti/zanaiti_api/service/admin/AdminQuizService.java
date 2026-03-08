@@ -3,7 +3,9 @@ package bg.zanaiti.zanaiti_api.service.admin;
 import bg.zanaiti.zanaiti_api.dto.QuizQuestionDto.QuizQuestionCreateDto;
 import bg.zanaiti.zanaiti_api.dto.QuizQuestionDto.QuizQuestionDto;
 import bg.zanaiti.zanaiti_api.dto.QuizQuestionDto.QuizQuestionTranslationDto;
+import bg.zanaiti.zanaiti_api.exceptionHandlers.CraftNotFoundException;
 import bg.zanaiti.zanaiti_api.exceptionHandlers.DuplicateQuestionException;
+import bg.zanaiti.zanaiti_api.exceptionHandlers.QuizQuestionNotFoundException;
 import bg.zanaiti.zanaiti_api.model.*;
 import bg.zanaiti.zanaiti_api.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +50,7 @@ public class AdminQuizService {
     @Transactional
     public QuizQuestionDto updateQuestion(Long id, QuizQuestionCreateDto dto) {
         QuizQuestion question = quizQuestionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+                .orElseThrow(() -> new QuizQuestionNotFoundException("Question not found with id: " + id));
 
         if (dto.getCorrectOptionIndex() != null) {
             question.setCorrectOptionIndex(dto.getCorrectOptionIndex());
@@ -58,7 +60,7 @@ public class AdminQuizService {
         }
         if (dto.getCraftId() != null && !dto.getCraftId().equals(question.getCraft().getId())) {
             Craft craft = craftRepository.findById(dto.getCraftId())
-                    .orElseThrow(() -> new RuntimeException("Craft not found"));
+                    .orElseThrow(() -> new CraftNotFoundException("Craft not found"));
             question.setCraft(craft);
         }
 
@@ -74,7 +76,7 @@ public class AdminQuizService {
     @Transactional
     public void deleteQuestion(Long id) {
         QuizQuestion question = quizQuestionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+                .orElseThrow(() -> new QuizQuestionNotFoundException("Question not found with id: " + id));
         question.setActive(false);
         quizQuestionRepository.save(question);
     }

@@ -56,6 +56,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ver);
     }
 
+    // Craft not found
+    @ExceptionHandler(CraftNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCraftNotFound(CraftNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ex.getMessage(), LocalDateTime.now()));
+    }
+
+    // Quiz Question not found
+    @ExceptionHandler(QuizQuestionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleQuizQuestionNotFound(QuizQuestionNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ex.getMessage(), LocalDateTime.now()));
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFound(EntityNotFoundException ex) {
         return ResponseEntity

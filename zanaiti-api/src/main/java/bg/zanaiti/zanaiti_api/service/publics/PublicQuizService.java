@@ -2,6 +2,7 @@ package bg.zanaiti.zanaiti_api.service.publics;
 
 import bg.zanaiti.zanaiti_api.dto.QuizQuestionDto.QuizQuestionDto;
 import bg.zanaiti.zanaiti_api.dto.QuizQuestionDto.QuizQuestionTranslationDto;
+import bg.zanaiti.zanaiti_api.exceptionHandlers.QuizQuestionNotFoundException;
 import bg.zanaiti.zanaiti_api.model.QuizQuestion;
 import bg.zanaiti.zanaiti_api.model.QuizQuestionTranslation;
 import bg.zanaiti.zanaiti_api.repository.QuizQuestionRepository;
@@ -28,7 +29,7 @@ public class PublicQuizService {
 
     public boolean checkAnswer(Long questionId, int selectedOptionIndex) {
         QuizQuestion question = quizQuestionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("QuizQuestion not found"));
+                .orElseThrow(() -> new QuizQuestionNotFoundException("QuizQuestion not found"));
         return question.getCorrectOptionIndex().equals(selectedOptionIndex);
     }
 

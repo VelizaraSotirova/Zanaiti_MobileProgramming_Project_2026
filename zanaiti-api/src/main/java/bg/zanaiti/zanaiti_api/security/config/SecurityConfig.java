@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/crafts/**").permitAll()
                         .requestMatchers("/api/quiz/craft/**").permitAll()
                         .requestMatchers("/api/quiz/*/check").permitAll()
+                        .requestMatchers("/api/progress/leaderboard").permitAll()
 
                         // LOGGED USERS ENDPOINTS
                         .requestMatchers("/api/progress/**").authenticated()
