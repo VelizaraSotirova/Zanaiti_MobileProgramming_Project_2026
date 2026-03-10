@@ -38,7 +38,7 @@ public class Craft {
 
     private LocalDateTime updatedAt;
 
-    // Връзка с преводите - един занаят има много преводи
+    // Translation link - one craft has many translations
     @OneToMany(mappedBy = "craft", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CraftTranslation> translations = new ArrayList<>();
 
