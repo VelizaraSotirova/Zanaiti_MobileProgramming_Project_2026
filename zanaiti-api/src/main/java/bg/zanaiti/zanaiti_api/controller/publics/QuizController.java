@@ -1,4 +1,4 @@
-package bg.zanaiti.zanaiti_api.controller;
+package bg.zanaiti.zanaiti_api.controller.publics;
 
 import bg.zanaiti.zanaiti_api.dto.QuizQuestionDto.QuizQuestionDto;
 import bg.zanaiti.zanaiti_api.service.publics.PublicQuizService;
@@ -30,7 +30,7 @@ public class QuizController {
         boolean isCorrect = quizService.checkAnswer(questionId, selectedOption);
         return ResponseEntity.ok(Map.of(
                 "correct", isCorrect,
-                "message", isCorrect ? "Bravo!" : "Try again!"
+                "message", isCorrect ? "Браво!" : "Грешен отговор!"
         ));
     }
 }

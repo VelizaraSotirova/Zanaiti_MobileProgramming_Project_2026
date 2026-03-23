@@ -98,8 +98,8 @@ public class DataSeeder implements CommandLineRunner {
 
         // Грънчарство / Pottery
         Craft pottery = Craft.builder()
-                .imageUrl("https://example.com/grancharsvo.jpg")
-                .animationUrl("https://example.com/animations/pottery.mp4")
+                .imageUrl("https://images.unsplash.com/photo-1520408222757-6f9f95d87d5d?q=80&w=680&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")
+                .animationUrl("https://cdn.pixabay.com/video/2020/07/24/45455-443133824_large.mp4")
                 .latitude(42.0)
                 .longitude(24.0)
                 .isActive(true)
@@ -132,8 +132,8 @@ public class DataSeeder implements CommandLineRunner {
 
         // Тъкане / Weaving
         Craft weaving = Craft.builder()
-                .imageUrl("https://example.com/takane.jpg")
-                .animationUrl("https://example.com/animations/weaving.mp4")
+                .imageUrl("https://images.unsplash.com/photo-1608724553456-89e963624dbb?q=80&w=874&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")
+                .animationUrl("https://media.istockphoto.com/id/990939998/video/production-and-weaving-of-carpets-and-fabrics.mp4?s=mp4-640x640-is&k=20&c=clXJQBsbe7KQ4bNi9FBYXRteU-_yuAmseXGdCBm6f5c=")
                 .latitude(41.9)
                 .longitude(25.1)
                 .isActive(true)
