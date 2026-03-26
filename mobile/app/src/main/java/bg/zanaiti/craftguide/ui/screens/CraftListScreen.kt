@@ -23,73 +23,55 @@ fun CraftListScreen(
     val crafts by viewModel.crafts.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Занаяти") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+
+    when {
+        isLoading -> {
+            CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+        }
+
+        crafts.isEmpty() -> {
+            Text(
+                text = "Няма занаяти",
+                modifier = Modifier.fillMaxSize()
             )
         }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when {
-                isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.fillMaxSize())
-                }
-                crafts.isEmpty() -> {
-                    Text(
-                        text = "Няма занаяти",
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                else -> {
-                    LazyColumn {
-                        items(crafts) { craft ->
-                            println("📸 Занаят: ${craft.translations["bg"]?.name}, URL: ${craft.imageUrl}")
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp)
-                                    .clickable { onCraftClick(craft) },
-                                elevation = CardDefaults.cardElevation(4.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
-                                ) {
-                                    // Снимка
-                                    AsyncImage(
-                                        model = craft.imageUrl,
-                                        contentDescription = craft.translations["bg"]?.name,
-                                        modifier = Modifier
-                                            .size(80.dp)
-                                            .padding(end = 16.dp),
-                                        contentScale = ContentScale.Crop
-                                    )
 
-                                    // Текст
-                                    Column(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(
-                                            text = craft.translations["bg"]?.name ?: "Няма име",
-                                            style = MaterialTheme.typography.titleLarge
-                                        )
-                                        Text(
-                                            text = craft.translations["bg"]?.description?.take(80) ?: "",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            maxLines = 2
-                                        )
-                                    }
-                                }
+        else -> {
+            LazyColumn {
+                items(crafts) { craft ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .clickable { onCraftClick(craft) },
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            AsyncImage(
+                                model = craft.imageUrl,
+                                contentDescription = craft.translations["bg"]?.name,
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .padding(end = 16.dp),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = craft.translations["bg"]?.name ?: "Няма име",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                Text(
+                                    text = craft.translations["bg"]?.description?.take(80) ?: "",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 2
+                                )
                             }
                         }
                     }

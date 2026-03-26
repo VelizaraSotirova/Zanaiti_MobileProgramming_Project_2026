@@ -2,8 +2,16 @@ package bg.zanaiti.craftguide.network
 
 import bg.zanaiti.craftguide.models.AnswerCheckRequest
 import bg.zanaiti.craftguide.models.AnswerCheckResponse
+import bg.zanaiti.craftguide.models.AuthResponse
 import bg.zanaiti.craftguide.models.Craft
+import bg.zanaiti.craftguide.models.LeaderboardEntry
+import bg.zanaiti.craftguide.models.LoginRequest
+import bg.zanaiti.craftguide.models.PointsHistoryItem
 import bg.zanaiti.craftguide.models.QuizQuestion
+import bg.zanaiti.craftguide.models.RegisterRequest
+import bg.zanaiti.craftguide.models.UserProfile
+import bg.zanaiti.craftguide.models.UserProgressDto
+import bg.zanaiti.craftguide.models.UserStats
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -43,11 +51,28 @@ interface ApiService {
     ): AnswerCheckResponse
 
     // Запазване на точки (само за логнати)
-    @POST("api/progress/user/{userId}/craft/{craftId}/complete-quiz")
+    @POST("api/progress/me/craft/{craftId}/complete-quiz")
     suspend fun completeQuiz(
-        @Path("userId") userId: Long,
         @Path("craftId") craftId: Long,
         @Query("correctAnswersCount") correctAnswersCount: Int,
         @Query("lang") lang: String = "bg"
-    ): retrofit2.Response<Unit>
+    ): retrofit2.Response<UserProgressDto>
+
+    @POST("api/auth/register")
+    suspend fun register(@Body request: RegisterRequest): AuthResponse
+
+    @POST("api/auth/login")
+    suspend fun login(@Body request: LoginRequest): AuthResponse
+
+    @GET("api/user/me")
+    suspend fun getMyProfile(): UserProfile
+
+    @GET("api/progress/user/{userId}/summary")
+    suspend fun getUserStats(@Path("userId") userId: Long): UserStats
+
+    @GET("api/points/user/{userId}")
+    suspend fun getPointsHistory(@Path("userId") userId: Long): List<PointsHistoryItem>
+
+    @GET("api/progress/leaderboard")
+    suspend fun getLeaderboard(): List<LeaderboardEntry>
 }

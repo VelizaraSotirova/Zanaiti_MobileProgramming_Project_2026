@@ -24,6 +24,11 @@ public class UserPointsController {
         return ResponseEntity.ok(pointsService.getUserHistory(currentUser.getUser().getId()));
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<PointsHistoryDto>> getPointsHistory(@PathVariable Long userId) {
+        return ResponseEntity.ok(pointsService.getUserHistory(userId));
+    }
+
     @GetMapping("/me/last-days")
     public ResponseEntity<List<PointsHistoryDto>> getMyHistoryLastDays(
             @RequestParam(defaultValue = "30") int days,

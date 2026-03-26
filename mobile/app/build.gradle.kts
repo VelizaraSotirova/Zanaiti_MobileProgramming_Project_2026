@@ -80,7 +80,14 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation(libs.androidx.material3)
 
+    // location
     implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
+
+    // DataStore за запазване на токен
+    implementation("androidx.datastore:datastore-preferences:1.1.0")
+
+    // Security (за безопасно съхранение)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

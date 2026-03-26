@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -16,12 +17,14 @@ fun ModeSelectionScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.CenterHorizontally, // Центрира бутоните и текста хоризонтално
+        verticalArrangement = Arrangement.Center // Центрира цялата група вертикално
     ) {
         Text(
             text = "Как искате да разгледате занаятите?",
-            style = MaterialTheme.typography.headlineSmall
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center, // Центрира самия тескт
+            modifier = Modifier.fillMaxWidth() // Разпъва текста, за да може TextAlign да работи
         )
         Spacer(modifier = Modifier.height(32.dp))
 

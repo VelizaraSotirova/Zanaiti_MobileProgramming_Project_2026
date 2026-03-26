@@ -2,6 +2,7 @@ package bg.zanaiti.zanaiti_api.service.user;
 
 import bg.zanaiti.zanaiti_api.dto.LeaderboardEntryDto;
 import bg.zanaiti.zanaiti_api.dto.UserProgressDto.UserProgressDto;
+import bg.zanaiti.zanaiti_api.dto.UserProgressDto.UserProgressSummaryDto;
 import bg.zanaiti.zanaiti_api.model.*;
 import bg.zanaiti.zanaiti_api.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -71,11 +72,16 @@ public class UserProgressService {
             userRepository.save(user);
 
             // Save to points history
+            String craftName = progress.getCraft().getTranslations().stream()
+                    .findFirst()
+                    .map(CraftTranslation::getName)
+                    .orElse("Занаят #" + craftId);
+
             PointsHistory history = PointsHistory.builder()
                     .user(user)
                     .points(totalPoints)
                     .source("QUIZ")
-                    .description("Completed quiz for craft: " + craftId)
+                    .description("Успешен тест: " + craftName)
                     .craft(progress.getCraft())
                     .build();
             pointsHistoryRepository.save(history);
@@ -96,6 +102,25 @@ public class UserProgressService {
                 .collect(Collectors.toList());
     }
 
+    public UserProgressSummaryDto getUserSummary(Long userId) {
+        List<UserProgress> progresses = progressRepository.findByUserId(userId);
+
+        int totalPoints = progresses.stream().mapToInt(UserProgress::getPointsEarned).sum();
+        int craftsVisited = progresses.size();
+        int quizzesCompleted = (int) progresses.stream().filter(UserProgress::isQuizCompleted).count();
+        double averageScore = progresses.stream()
+                .filter(p -> p.getQuizScore() != null)
+                .mapToInt(UserProgress::getQuizScore)
+                .average()
+                .orElse(0.0);
+
+        return UserProgressSummaryDto.builder()
+                .totalPoints(totalPoints)
+                .craftsVisited(craftsVisited)
+                .quizzesCompleted(quizzesCompleted)
+                .averageScore(averageScore)
+                .build();
+    }
 
     private UserProgress getOrCreateProgress(Long userId, Long craftId) {
         return progressRepository.findByUserIdAndCraftId(userId, craftId)

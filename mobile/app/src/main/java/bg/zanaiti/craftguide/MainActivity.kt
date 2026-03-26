@@ -7,8 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,9 +18,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import bg.zanaiti.craftguide.models.Craft
+import bg.zanaiti.craftguide.network.RetrofitClient
+import bg.zanaiti.craftguide.ui.AuthViewModel
+import bg.zanaiti.craftguide.ui.AuthViewModelFactory
 import bg.zanaiti.craftguide.ui.CraftViewModel
 import bg.zanaiti.craftguide.ui.screens.*
 import bg.zanaiti.craftguide.ui.theme.CraftGuideTheme
+import bg.zanaiti.craftguide.utils.TokenManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -27,6 +33,11 @@ import com.google.accompanist.permissions.rememberPermissionState
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Инициализация на TokenManager и RetrofitClient
+        val tokenManager = TokenManager(this)
+        RetrofitClient.initialize(tokenManager)
+
         setContent {
             CraftGuideTheme {
                 Surface(
@@ -44,72 +55,73 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun CraftApp(viewModel: CraftViewModel = viewModel()) {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val tokenManager = remember { TokenManager(context) }
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(tokenManager)
+    )
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val username by authViewModel.username.collectAsState()
     val crafts by viewModel.crafts.collectAsState()
 
-    // Състояние за локацията
-    val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+    println("📱 CraftApp: isAuthenticated=$isAuthenticated, username=$username")
 
-    // Заявка за разрешение при нужда
-    LaunchedEffect(Unit) {
-        // Нищо не правим веднага – ще поискаме когато потребителят избере картата
-    }
+    // Състояние за локацията (за картата)
+    val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     NavHost(
         navController = navController,
         startDestination = "welcome"
     ) {
-        // Welcome Screen
+        // ==================== WELCOME SCREEN ====================
         composable("welcome") {
             WelcomeScreen(
                 onStartClick = {
-                    navController.navigate("mode_selection")
+                    navController.navigate("main")
                 }
             )
         }
 
-        // Избор на режим
-        composable("mode_selection") {
-            ModeSelectionScreen(
-                onSelectList = {
-                    navController.navigate("list")
+        // ==================== ОСНОВЕН ЕКРАН ====================
+        composable("main") {
+            MainScreen(
+                viewModel = viewModel,
+                startDestination = "mode_selection",
+                isLoggedIn = isAuthenticated,
+                username = username,
+                onProfileClick = {
+                    if (isAuthenticated) {
+                        navController.navigate("profile")
+                    } else {
+                        navController.navigate("auth")
+                    }
                 },
-                onSelectMap = {
-                    // Изискваме локация преди да покажем картата
-                    locationPermissionState.launchPermissionRequest()
-                    navController.navigate("map")
+                onLogoutClick = {
+                    authViewModel.logout()
                 }
             )
         }
 
-        // Списък със занаяти
-        composable("list") {
-            CraftListScreen(
-                onCraftClick = { craft ->
-                    navController.navigate("detail/${craft.id}")
+        // ==================== АВТЕНТИКАЦИЯ ====================
+        composable("auth") {
+            AuthScreen(
+                tokenManager = tokenManager,
+                onAuthSuccess = {
+                    navController.popBackStack()
+                    navController.navigate("main")
                 }
             )
         }
 
-        // Карта (с проверка за локация)
-        composable("map") {
-            if (locationPermissionState.status.isGranted) {
-                MapScreen(
-                    showOnlyCraftId = null,
-                    onCraftClick = { craft ->
-                        navController.navigate("detail/${craft.id}")
-                    }
-                )
-            } else {
-                // Показваме екран за искане на разрешение
-                PermissionRequestScreen(
-                    onRequestPermission = {
-                        locationPermissionState.launchPermissionRequest()
-                    },
-                    onBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
+        // ==================== ПРОФИЛ ====================
+        composable("profile") {
+            // collectAsState() следи промените в реално време
+            val currentUserId by authViewModel.userId.collectAsState()
+
+            ProfileScreen(
+                userId = currentUserId ?: 0L,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // Детайли за занаят
@@ -123,7 +135,9 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
                     onShowOnMap = {
                         navController.navigate("map_single/${it.id}")
                     },
-                    onStartQuiz = { navController.navigate("quiz/${it.id}") }
+                    onStartQuiz = {
+                        navController.navigate("quiz/${it.id}")
+                    }
                 )
             }
         }
@@ -147,10 +161,17 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
                 QuizScreen(
                     craft = it,
                     onBack = { navController.popBackStack() },
-                    isLoggedIn = false,  // ← тук ще сложиш true, когато имаш логнат потребител
-                    userId = null        // ← тук ще сложиш ID-то на логнатия
+                    isLoggedIn = isAuthenticated,
+                    userId = authViewModel.userId.value
                 )
             }
+        }
+
+        // Leaderboard
+        composable("leaderboard") {
+            LeaderboardScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

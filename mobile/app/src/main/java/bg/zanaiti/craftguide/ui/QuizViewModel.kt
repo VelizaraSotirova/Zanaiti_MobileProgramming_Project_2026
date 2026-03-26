@@ -73,29 +73,33 @@ class QuizViewModel(
                 )
                 _feedback.value = response.message
 
+                // Тук само обновяваме локалното състояние (UI)
                 if (response.correct) {
                     _score.value += question.pointsReward
                     _correctCount.value += 1
-
-                    // ✅ АКО Е ЛОГНАТ, ПРАЩАМЕ ТОЧКИТЕ КЪМ БЕКЕНДА
-                    if (isLoggedIn && userId != null) {
-                        sendPointsToBackend(craftId, _correctCount.value)
-                    }
                 }
 
-                // Изчакваме 1.5 секунди, за да покажем съобщението
+                // Изчакваме, за да види потребителят дали е познал
                 kotlinx.coroutines.delay(1500)
+
                 _feedback.value = null
                 _selectedOption.value = null
 
-                // Преминаваме към следващия въпрос
+                // Проверка дали това беше последният въпрос
                 if (_currentIndex.value + 1 < _questions.value.size) {
                     _currentIndex.value += 1
                 } else {
+                    // куизът е завършен
                     _quizCompleted.value = true
+
+                    // пращаме финалния резултат към бекенда
+                    if (isLoggedIn) {
+                        sendPointsToBackend(craftId, _correctCount.value)
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                _feedback.value = "Грешка при връзката със сървъра"
             }
         }
     }
@@ -103,19 +107,19 @@ class QuizViewModel(
     private suspend fun sendPointsToBackend(craftId: Long, correctAnswersCount: Int) {
         try {
             val response = RetrofitClient.apiService.completeQuiz(
-                userId = userId!!,
                 craftId = craftId,
                 correctAnswersCount = correctAnswersCount,
                 lang = "bg"
             )
+
             if (response.isSuccessful) {
-                println("✅ Точките са записани успешно!")
+                println("✅ Успех! Сървърът върна: ${response.body()}")
             } else {
-                println("Грешка при запис на точки: ${response.code()}")
+                // грешка 404, ако адресите не съвпадат
+                println("❌ Грешка ${response.code()}: ${response.errorBody()?.string()}")
             }
         } catch (e: Exception) {
-            println("Грешка при запис на точки: ${e.message}")
-            e.printStackTrace()
+            println("❌ Тотална грешка: ${e.message}")
         }
     }
 

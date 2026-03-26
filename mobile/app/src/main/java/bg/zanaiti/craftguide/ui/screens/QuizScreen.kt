@@ -34,120 +34,103 @@ fun QuizScreen(
     val feedback by viewModel.feedback.collectAsState()
     val correctCount by viewModel.correctCount.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Quiz: ${craft.translations["bg"]?.name}") },
-                navigationIcon = {
-                    IconButton(onClick = {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        when {
+            isLoading -> {
+                CircularProgressIndicator()
+            }
+            quizCompleted -> {
+                QuizResultScreen(
+                    score = score,
+                    totalQuestions = questions.size,
+                    correctAnswers = correctCount,
+                    onBack = {
                         viewModel.reset()
                         onBack()
-                    }) {
-                        Text("←")
                     }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            when {
-                isLoading -> {
-                    CircularProgressIndicator()
-                }
-                quizCompleted -> {
-                    QuizResultScreen(
-                        score = score,
-                        totalQuestions = questions.size,
-                        correctAnswers = correctCount,
-                        onBack = {
-                            viewModel.reset()
-                            onBack()
-                        }
-                    )
-                }
-                questions.isNotEmpty() -> {
-                    val question = questions[currentIndex]
-                    val translation = question.translations["bg"]!!
+                )
+            }
+            questions.isNotEmpty() -> {
+                val question = questions[currentIndex]
+                val translation = question.translations["bg"]!!
 
-                    // Прогрес и точки
+                // Прогрес и точки
+                Text(
+                    text = "Въпрос ${currentIndex + 1} от ${questions.size}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "⭐ Точки: $score",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Въпрос
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
                     Text(
-                        text = "Въпрос ${currentIndex + 1} от ${questions.size}",
-                        style = MaterialTheme.typography.titleMedium
+                        text = translation.questionText,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.titleLarge
                     )
-                    Text(
-                        text = "⭐ Точки: $score",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    // Въпрос
-                    Card(
+                // Опции
+                val options = listOf(
+                    translation.optionA,
+                    translation.optionB,
+                    translation.optionC,
+                    translation.optionD
+                )
+
+                options.forEachIndexed { index, option ->
+                    Button(
+                        onClick = { viewModel.selectOption(index) },
                         modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(4.dp)
-                    ) {
-                        Text(
-                            text = translation.questionText,
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Опции
-                    val options = listOf(
-                        translation.optionA,
-                        translation.optionB,
-                        translation.optionC,
-                        translation.optionD
-                    )
-
-                    options.forEachIndexed { index, option ->
-                        Button(
-                            onClick = { viewModel.selectOption(index) },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedOption == index)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.secondary
-                            )
-                        ) {
-                            Text(option)
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    // Бутон за потвърждение
-                    if (selectedOption != null && feedback == null) {
-                        Button(
-                            onClick = { viewModel.submitAnswer() },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Потвърди")
-                        }
-                    }
-
-                    // Съобщение за обратна връзка
-                    feedback?.let {
-                        Text(
-                            text = it,
-                            color = if (it.contains("Bravo"))
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedOption == index)
                                 MaterialTheme.colorScheme.primary
                             else
-                                MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge
+                                MaterialTheme.colorScheme.secondary
                         )
+                    ) {
+                        Text(option)
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Бутон за потвърждение
+                if (selectedOption != null && feedback == null) {
+                    Button(
+                        onClick = { viewModel.submitAnswer() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Потвърди")
+                    }
+                }
+
+                // Съобщение за обратна връзка
+                feedback?.let {
+                    Text(
+                        text = it,
+                        color = if (it.contains("Bravo") || it.contains("Правилно"))
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
             }
         }
