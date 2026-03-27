@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Login
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,6 +18,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import bg.zanaiti.craftguide.ui.CraftViewModel
+import androidx.activity.compose.BackHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +35,47 @@ fun MainScreen(
 
     // Диалогов прозорец при напускане
     var showLogoutDialog by remember { mutableStateOf(false) }
+
+    // Диалогов прозорец при напускане на приложението
+    var showExitAppDialog by remember { mutableStateOf(false) }
+    // Вземаме контекста, за да можем да затворим Activity-то
+    val context = LocalContext.current
+
+    // Прихващане на системния бутон "Назад"
+    BackHandler(enabled = true) {
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+        // Ако сме на началния екран, показваме диалога за изход
+        if (currentRoute == "mode_selection") {
+            showExitAppDialog = true
+        } else {
+            // Ако сме навътре в приложението, просто се връщаме назад
+            navController.popBackStack()
+        }
+    }
+
+    // Диалог за изход от приложението
+    if (showExitAppDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitAppDialog = false },
+            title = { Text("Изход") },
+            text = { Text("Сигурни ли сте, че искате да затворите приложението?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExitAppDialog = false
+                    // Затваряме цялото Activity и приложението
+                    (context as? android.app.Activity)?.finish()
+                }) {
+                    Text("Да")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExitAppDialog = false }) {
+                    Text("Не")
+                }
+            }
+        )
+    }
 
     // Следим текущия "гръбнак" на навигацията
     val navBackStackEntry by navController.currentBackStackEntryAsState()
