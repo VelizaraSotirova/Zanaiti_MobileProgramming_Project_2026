@@ -1,6 +1,7 @@
 package bg.zanaiti.zanaiti_api.exceptionHandlers;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -121,5 +122,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleBadCredentials() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message", "Невалидно потребителско име или парола"));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateData(DataIntegrityViolationException ex) {
+        // Използваме съобщението от Exception-а, ако е наше, или общо съобщение
+        String message = ex.getMessage();
+        if (message != null && message.contains("Duplicate entry")) {
+            message = "Данните вече съществуват в системата";
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT) // 409
+                .body(new ErrorResponse(message, LocalDateTime.now()));
     }
 }

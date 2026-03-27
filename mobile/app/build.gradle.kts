@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "bg.zanaiti.craftguide"
-        minSdk = 24
+        minSdk = 25
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -74,6 +74,7 @@ dependencies {
     // Open Street Map
     implementation("org.osmdroid:osmdroid-android:6.1.20")
     implementation("androidx.compose.ui:ui-viewbinding:1.7.8")
+    implementation("com.github.MKergall:osmbonuspack:6.9.0")
 
     // Navigation (down)
     implementation("androidx.navigation:navigation-compose:2.8.9")
@@ -88,6 +89,7 @@ dependencies {
 
     // Security (за безопасно съхранение)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation(libs.compose.material3)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

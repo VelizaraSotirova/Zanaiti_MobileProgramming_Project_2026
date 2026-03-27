@@ -1,6 +1,8 @@
 package bg.zanaiti.zanaiti_api.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -23,14 +25,19 @@ public class User {
     private Long id;
 
     @Column(unique = true, nullable = false)
+    @NotBlank(message = "Username is required")
     private String username;
 
     @Column(unique = true, nullable = false)
+    @NotBlank(message = "Email is required!")
+    @Email(message = "Invalid email format")
     private String email;
 
     @Column(nullable = false)
+    @NotBlank(message = "Password is required!")
     private String password;
 
+    @NotBlank(message = "Full name is required!")
     private String fullName;
 
     private int totalPoints;

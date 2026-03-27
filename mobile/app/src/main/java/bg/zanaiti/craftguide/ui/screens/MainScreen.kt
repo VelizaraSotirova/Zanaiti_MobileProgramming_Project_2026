@@ -31,6 +31,9 @@ fun MainScreen(
     val navController = rememberNavController()
     val crafts by viewModel.crafts.collectAsState()
 
+    // Диалогов прозорец при напускане
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     // Следим текущия "гръбнак" на навигацията
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -62,6 +65,30 @@ fun MainScreen(
         else -> "Старинни занаяти"
     }
 
+    // Дефинирам какво ще прави самия диалогов прозорец
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text(text = "Изход") },
+            text = { Text("Сигурни ли сте, че искате да напуснете профила си?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogoutClick() // Извикваме реалната функция за изход
+                    }
+                ) {
+                    Text("Да", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Не")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -90,7 +117,7 @@ fun MainScreen(
                         }) {
                             Icon(Icons.Default.Leaderboard, contentDescription = "Класация")
                         }
-                        IconButton(onClick = onLogoutClick) {
+                        IconButton(onClick = { showLogoutDialog = true }) {
                             Icon(Icons.Default.ExitToApp, contentDescription = "Изход")
                         }
                     } else {

@@ -8,6 +8,7 @@ import bg.zanaiti.zanaiti_api.security.dto.LoginResponse;
 import bg.zanaiti.zanaiti_api.security.jwt.JwtService;
 import bg.zanaiti.zanaiti_api.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -43,14 +44,42 @@ public class AuthService {
                 .build();
     }
 
+//    public LoginResponse register(UserCreateDto createDto) {
+//        // 1. Creating a new user
+//        UserDto user = userService.createUser(createDto);
+//
+//        // 2. Loading UserDetails for the new user
+//        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(user.getUsername());
+//
+//        // 3. JWT token generation
+//        String token = jwtService.generateToken(userDetails);
+//
+//        return LoginResponse.builder()
+//                .token(token)
+//                .id(user.getId())
+//                .username(user.getUsername())
+//                .email(user.getEmail())
+//                .fullName(user.getFullName())
+//                .totalPoints(user.getTotalPoints())
+//                .role(user.getRoles().stream().findFirst().orElse("USER"))
+//                .build();
+//    }
+
     public LoginResponse register(UserCreateDto createDto) {
-        // 1. Creating a new user
+        // 1. ПРОВЕРКА ПРЕДИ СЪЗДАВАНЕ (За да избегнем 500 Error)
+        // Тук приемам, че в UserService ще добавим тези методи:
+        if (userService.existsByEmail(createDto.getEmail())) {
+            throw new DataIntegrityViolationException("Имейл адресът вече е регистриран");
+        }
+        if (userService.existsByUsername(createDto.getUsername())) {
+            throw new DataIntegrityViolationException("Потребителското име вече е заето");
+        }
+
+        // 2. Създаване на потребителя (вече е безопасно)
         UserDto user = userService.createUser(createDto);
 
-        // 2. Loading UserDetails for the new user
+        // ... останалата част от кода ти за токена ...
         CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(user.getUsername());
-
-        // 3. JWT token generation
         String token = jwtService.generateToken(userDetails);
 
         return LoginResponse.builder()

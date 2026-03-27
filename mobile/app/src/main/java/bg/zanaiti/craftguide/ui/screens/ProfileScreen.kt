@@ -140,8 +140,8 @@ fun ProfileScreen(
                                     ) {
                                         StatItem("⭐ Точки", "${stats?.totalPoints ?: 0}")
                                         StatItem("🏺 Посетени", "${stats?.craftsVisited ?: 0}")
-                                        StatItem("✅ Quiz", "${stats?.quizzesCompleted ?: 0}")
-                                        StatItem("📈 Ср. Рез.", "${String.format("%.1f", stats?.averageScore ?: 0.0)}%")
+                                        StatItem("✅ Тест", "${stats?.quizzesCompleted ?: 0}")
+                                        StatItem("📈 Ср. Резултат", "${String.format("%.1f", stats?.averageScore ?: 0.0)}%")
                                     }
                                 }
                             }

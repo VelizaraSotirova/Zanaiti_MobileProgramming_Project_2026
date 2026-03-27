@@ -80,6 +80,34 @@ class AuthViewModel(
         }
     }
 
+//    fun register(
+//        username: String,
+//        email: String,
+//        password: String,
+//        fullName: String,
+//        onSuccess: () -> Unit
+//    ) {
+//        viewModelScope.launch {
+//            _isLoading.value = true
+//            _error.value = null
+//            try {
+//                val response = RetrofitClient.apiService.register(
+//                    RegisterRequest(username, email, password, fullName)
+//                )
+//                tokenManager.saveToken(response.token)
+//                tokenManager.saveUsername(response.username)
+//                _isAuthenticated.value = true
+//                //
+//                _username.value = response.username
+//                onSuccess()
+//            } catch (e: Exception) {
+//                _error.value = e.message ?: "Грешка при регистрация"
+//            } finally {
+//                _isLoading.value = false
+//            }
+//        }
+//    }
+
     fun register(
         username: String,
         email: String,
@@ -87,6 +115,25 @@ class AuthViewModel(
         fullName: String,
         onSuccess: () -> Unit
     ) {
+        // 1. Първо проверяваме за празни полета
+        if (username.isBlank() || email.isBlank() || password.isBlank() || fullName.isBlank()) {
+            _error.value = "Моля, попълнете всички полета!"
+            return
+        }
+
+        // 2. Можеш да добавиш и проверка за формат на имейл
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            _error.value = "Невалиден формат на имейла!"
+            return
+        }
+
+        // 3. Проверка за дължина на парола
+        if (password.length < 6) {
+            _error.value = "Паролата трябва да е поне 6 символа!"
+            return
+        }
+
+
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -97,11 +144,18 @@ class AuthViewModel(
                 tokenManager.saveToken(response.token)
                 tokenManager.saveUsername(response.username)
                 _isAuthenticated.value = true
-                //
                 _username.value = response.username
+                _userId.value = response.id
                 onSuccess()
+            } catch (e: retrofit2.HttpException) {
+                val errorMessage = when (e.code()) {
+                    409 -> "Вече съществува потребител с това потребителско име и/или имейл!"
+                    400 -> "Моля, въведете всички полета"
+                    else -> e.message ?: "Грешка при регистрация"
+                }
+                _error.value = errorMessage
             } catch (e: Exception) {
-                _error.value = e.message ?: "Грешка при регистрация"
+                _error.value = e.message ?: "Грешка при свързване със сървъра"
             } finally {
                 _isLoading.value = false
             }
