@@ -6,12 +6,15 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -130,7 +133,7 @@ fun MapScreen(
                     Text("🎯")
                 }
 
-                // Инфо карта и бутон "Заведи ме"
+                // Инфо карта и бутон "Заведи ме" (с бутон за затваряне)
                 selectedCraft?.let { craft ->
                     CraftInfoCard(
                         craft = craft,
@@ -151,7 +154,8 @@ fun MapScreen(
                                     }
                                 }
                             }
-                        }
+                        },
+                        onClose = { selectedCraft = null }
                     )
                 }
             }
@@ -173,22 +177,55 @@ fun PermissionRequestUI(onRetry: () -> Unit) {
 }
 
 @Composable
-fun BoxScope.CraftInfoCard(craft: Craft, onDetailsClick: () -> Unit, onRouteClick: () -> Unit) {
+fun BoxScope.CraftInfoCard(
+    craft: Craft,
+    onDetailsClick: () -> Unit,
+    onRouteClick: () -> Unit,
+    onClose: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .align(Alignment.BottomCenter)
+            .padding(16.dp),
         elevation = CardDefaults.cardElevation(10.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = craft.translations["bg"]?.name ?: "Няма име", style = MaterialTheme.typography.titleLarge)
-            Text(text = craft.translations["bg"]?.description?.take(80) + "...", style = MaterialTheme.typography.bodyMedium)
+            // Ред със заглавие и бутон за затваряне
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = craft.translations["bg"]?.name ?: "Няма име",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Default.Close, contentDescription = "Затвори")
+                }
+            }
+
+            Text(
+                text = craft.translations["bg"]?.description?.take(80) + "...",
+                style = MaterialTheme.typography.bodyMedium
+            )
             Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onDetailsClick, modifier = Modifier.weight(1f)) { Text("Детайли") }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(onClick = onDetailsClick, modifier = Modifier.weight(1f)) {
+                    Text("Детайли")
+                }
                 Button(
                     onClick = onRouteClick,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                ) { Text("Заведи ме там") }
+                ) {
+                    Text("Заведи ме там")
+                }
             }
         }
     }
