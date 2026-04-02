@@ -150,7 +150,7 @@ fun QuizResultScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "🏆 Quiz завършен! 🏆",
+            text = "🏆 Тест завършен! 🏆",
             style = MaterialTheme.typography.headlineSmall
         )
         Spacer(modifier = Modifier.height(24.dp))

@@ -80,10 +80,10 @@ class PublicCraftServiceTest {
 
         activeCraft.getTranslations().add(bgTranslation);
     }
-
     // ============= getAllCrafts() TESTS =============
 
     @Test
+
     void getAllCrafts_ShouldReturnListOfActiveCrafts_WhenActiveCraftsExist() {
         // Arrange
         List<Craft> crafts = List.of(activeCraft);

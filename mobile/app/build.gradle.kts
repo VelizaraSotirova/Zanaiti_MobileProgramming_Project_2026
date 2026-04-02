@@ -34,8 +34,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
+    }
+
+    packaging {
+        resources {
+            // SceneView/ARCore специфични настройки
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 
@@ -90,6 +98,24 @@ dependencies {
     // Security (за безопасно съхранение)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation(libs.compose.material3)
+
+    // --- AR & 3D Dependencies ---
+    // SceneView за Compose (базиран на ARCore)
+    implementation("io.github.sceneview:arsceneview:2.2.1")
+    // Google ARCore Core Library
+    implementation("com.google.ar:core:1.41.0")
+    // Допълнителни инструменти за работа с изображения (ако се наложи)
+    implementation("androidx.core:core-ktx:1.12.0")
+
+    // ML Kit Object Detection (без ARCore)
+    implementation("com.google.mlkit:object-detection:17.0.2")
+    implementation("com.google.mlkit:object-detection-custom:17.0.2")
+
+    // CameraX
+    implementation("androidx.camera:camera-core:1.4.2")
+    implementation("androidx.camera:camera-camera2:1.4.2")
+    implementation("androidx.camera:camera-lifecycle:1.4.2")
+    implementation("androidx.camera:camera-view:1.4.2")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bg.zanaiti.craftguide.models.Craft
 import bg.zanaiti.craftguide.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -24,7 +25,7 @@ class CraftViewModel : ViewModel() {
     }
 
     private fun loadCrafts() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) { // Изпълнява се на фонова нишка
             _isLoading.value = true
             _error.value = null
             try {
