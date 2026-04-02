@@ -80,34 +80,6 @@ class AuthViewModel(
         }
     }
 
-//    fun register(
-//        username: String,
-//        email: String,
-//        password: String,
-//        fullName: String,
-//        onSuccess: () -> Unit
-//    ) {
-//        viewModelScope.launch {
-//            _isLoading.value = true
-//            _error.value = null
-//            try {
-//                val response = RetrofitClient.apiService.register(
-//                    RegisterRequest(username, email, password, fullName)
-//                )
-//                tokenManager.saveToken(response.token)
-//                tokenManager.saveUsername(response.username)
-//                _isAuthenticated.value = true
-//                //
-//                _username.value = response.username
-//                onSuccess()
-//            } catch (e: Exception) {
-//                _error.value = e.message ?: "Грешка при регистрация"
-//            } finally {
-//                _isLoading.value = false
-//            }
-//        }
-//    }
-
     fun register(
         username: String,
         email: String,
