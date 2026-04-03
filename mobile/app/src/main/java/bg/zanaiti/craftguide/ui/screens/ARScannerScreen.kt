@@ -24,7 +24,7 @@ import kotlin.math.abs
 import java.util.concurrent.Executors
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class, ExperimentalGetImage::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ARScannerScreen(
     onObjectDetected: (String) -> Unit,
@@ -36,7 +36,8 @@ fun ARScannerScreen(
 
     var isDetected by remember { mutableStateOf(false) }
     var isAnalyzing by remember { mutableStateOf(false) }
-    var statusText by remember { mutableStateOf("Насочете камерата към занаят...") }
+    var isScanning by remember { mutableStateOf(false) }
+    var statusText by remember { mutableStateOf("Натиснете бутона за сканиране") }
     var detectionCount by remember { mutableStateOf(0) }
     var lastDetectedCraft by remember { mutableStateOf<String?>(null) }
     var showDetectionCard by remember { mutableStateOf(false) }
@@ -63,13 +64,10 @@ fun ARScannerScreen(
         .build()
     val objectDetector = ObjectDetection.getClient(options)
 
-    fun detectCraftByShape(width: Int, height: Int, aspectRatio: Float): String {
-        return when {
-            abs(aspectRatio - 1f) < 0.3f && width > 100 && height > 100 -> "Грънчарство"
-            aspectRatio > 1.5f && width > 200 -> "Тъкане"
-            width < 150 && height < 150 -> "Дърворезба"
-            else -> "Занаят"
-        }
+    fun detectCraftByShape(width: Int, height: Int, aspectRatio: Float): String? {
+        val isRound = abs(aspectRatio - 1f) < 0.4f
+        val isLarge = width > 150 && height > 150
+        return if (isRound && isLarge) "Грънчарство" else null
     }
 
     Scaffold(
@@ -104,7 +102,7 @@ fun ARScannerScreen(
                         imageAnalysis.setAnalyzer(
                             Executors.newSingleThreadExecutor()
                         ) { imageProxy ->
-                            if (!isAnalyzing && !isDetected) {
+                            if (!isAnalyzing && isScanning && !isDetected) {
                                 isAnalyzing = true
                                 val mediaImage = imageProxy.image
                                 if (mediaImage != null) {
@@ -125,35 +123,40 @@ fun ARScannerScreen(
                                                     val objectArea = width * height
                                                     val aspectRatio = width.toFloat() / height.toFloat()
 
-                                                    if (objectArea > screenArea * 0.15) {
+                                                    if (objectArea > screenArea * 0.25) {
                                                         val craftType = detectCraftByShape(width, height, aspectRatio)
-                                                        detectionCount++
+                                                        if (craftType != null) {
+                                                            detectionCount++
+                                                            if (detectionCount >= 3) {
+                                                                if (lastDetectedCraft == craftType) {
+                                                                    isDetected = true
+                                                                    isScanning = false
+                                                                    statusText = "✅ Разпознато гювече!"
+                                                                    lastDetectedCraft = craftType
 
-                                                        if (detectionCount >= 3) {
-                                                            if (lastDetectedCraft == craftType) {
-                                                                isDetected = true
-                                                                statusText = "✅ Разпознат: $craftType!"
-                                                                lastDetectedCraft = craftType
-
-                                                                coroutineScope.launch {
-                                                                    showDetectionCard = true
-                                                                    delay(1500)
-                                                                    showDetectionCard = false
-                                                                    onObjectDetected(craftType)
+                                                                    coroutineScope.launch {
+                                                                        showDetectionCard = true
+                                                                        delay(1500)
+                                                                        showDetectionCard = false
+                                                                        onObjectDetected(craftType)
+                                                                    }
                                                                 }
+                                                            } else {
+                                                                lastDetectedCraft = craftType
+                                                                statusText = "🔍 Разпознавам... ($detectionCount/3)"
                                                             }
                                                         } else {
-                                                            lastDetectedCraft = craftType
-                                                            statusText = "🔍 Разпознавам... ($detectionCount/3)"
+                                                            detectionCount = 0
+                                                            statusText = "📷 Приближете гювечето"
                                                         }
                                                     } else {
                                                         detectionCount = 0
-                                                        statusText = "📷 Приближете занаята"
+                                                        statusText = "📷 Приближете гювечето"
                                                     }
                                                 }
                                             } else {
                                                 detectionCount = 0
-                                                statusText = "🔍 Търся занаят..."
+                                                statusText = "🔍 Търся гювече..."
                                             }
                                         }
                                         .addOnCompleteListener {
@@ -201,12 +204,24 @@ fun ARScannerScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        isScanning = true
+                        detectionCount = 0
+                        statusText = "Сканирам... Насочете към гювече"
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
+                ) {
+                    Text("🔍 Сканирай")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = onBack) {
                     Text("Назад")
                 }
             }
 
-            // Временна карта при разпознаване
             if (showDetectionCard) {
                 Card(
                     modifier = Modifier
@@ -220,7 +235,7 @@ fun ARScannerScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text("🎉 Разпознат занаят! 🎉", style = MaterialTheme.typography.titleLarge)
-                        Text("Това е свързано с ${lastDetectedCraft ?: "занаят"}.")
+                        Text("Това е свързано с грънчарството.")
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("⏳ Пренасочване след момент...", style = MaterialTheme.typography.bodySmall)
                     }

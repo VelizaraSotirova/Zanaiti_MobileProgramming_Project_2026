@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.AaptOptions
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -21,6 +23,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    aaptOptions {
+        noCompress("tflite")
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -30,6 +36,13 @@ android {
             )
         }
     }
+
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("src/main/assets", "src/main/ml")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -37,6 +50,7 @@ android {
 
     buildFeatures {
         compose = true
+        mlModelBinding = false
     }
 
     packaging {
@@ -52,6 +66,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
 
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -116,6 +131,17 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.4.2")
     implementation("androidx.camera:camera-lifecycle:1.4.2")
     implementation("androidx.camera:camera-view:1.4.2")
+
+    implementation("com.google.mlkit:image-labeling:17.0.7")
+    implementation("com.google.mlkit:image-labeling-custom:17.0.1")
+    implementation("com.google.android.gms:play-services-mlkit-image-labeling:16.0.8")
+    //implementation("com.google.ar:core:1.33.0")
+    //implementation("com.google.ar.sceneform.ux:sceneform-ux:1.17.1")
+
+    // TensorFlow Lite библиотеки (за да спре да дава грешка в Model.java)
+//    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+//    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4")
+//    implementation("org.tensorflow:tensorflow-lite:2.14.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
