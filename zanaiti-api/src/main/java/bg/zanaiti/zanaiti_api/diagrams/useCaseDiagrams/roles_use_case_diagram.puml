@@ -19,6 +19,7 @@ rectangle "Система" {
 Guest --> UC1
 Guest --> UC2
 Guest --> UC3
+Guest --> UC4
 
 User --> UC2
 User --> UC3

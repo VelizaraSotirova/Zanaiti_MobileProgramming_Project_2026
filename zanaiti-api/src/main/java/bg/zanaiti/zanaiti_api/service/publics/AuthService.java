@@ -44,30 +44,9 @@ public class AuthService {
                 .build();
     }
 
-//    public LoginResponse register(UserCreateDto createDto) {
-//        // 1. Creating a new user
-//        UserDto user = userService.createUser(createDto);
-//
-//        // 2. Loading UserDetails for the new user
-//        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(user.getUsername());
-//
-//        // 3. JWT token generation
-//        String token = jwtService.generateToken(userDetails);
-//
-//        return LoginResponse.builder()
-//                .token(token)
-//                .id(user.getId())
-//                .username(user.getUsername())
-//                .email(user.getEmail())
-//                .fullName(user.getFullName())
-//                .totalPoints(user.getTotalPoints())
-//                .role(user.getRoles().stream().findFirst().orElse("USER"))
-//                .build();
-//    }
 
     public LoginResponse register(UserCreateDto createDto) {
         // 1. ПРОВЕРКА ПРЕДИ СЪЗДАВАНЕ (За да избегнем 500 Error)
-        // Тук приемам, че в UserService ще добавим тези методи:
         if (userService.existsByEmail(createDto.getEmail())) {
             throw new DataIntegrityViolationException("Имейл адресът вече е регистриран");
         }
@@ -78,7 +57,7 @@ public class AuthService {
         // 2. Създаване на потребителя (вече е безопасно)
         UserDto user = userService.createUser(createDto);
 
-        // ... останалата част от кода ти за токена ...
+        // Код за токена
         CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(user.getUsername());
         String token = jwtService.generateToken(userDetails);
 
