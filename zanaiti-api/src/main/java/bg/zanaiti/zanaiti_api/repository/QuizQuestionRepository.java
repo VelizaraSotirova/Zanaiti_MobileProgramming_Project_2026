@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface QuizQuestionRepository extends JpaRepository<QuizQuestion, Long> {
     // All questions for a craft
-    List<QuizQuestion> findByCraftId(Long craftId);
+    //List<QuizQuestion> findByCraftId(Long craftId);
     // Only the active ones
     List<QuizQuestion> findByCraftIdAndIsActiveTrue(Long craftId);
 

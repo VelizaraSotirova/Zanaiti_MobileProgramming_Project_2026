@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,21 +17,24 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import bg.zanaiti.craftguide.ui.CraftViewModel
+import bg.zanaiti.craftguide.ui.LanguageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: CraftViewModel,
+    langViewModel: LanguageViewModel, // 1. Добавен параметър
     startDestination: String = "mode_selection",
     isLoggedIn: Boolean,
     username: String? = null,
     onProfileClick: () -> Unit,
     onLogoutClick: () -> Unit,
-    onArScannerClick: () -> Unit // Подава се от MainActivity
+    onArScannerClick: () -> Unit
 ) {
     val navController = rememberNavController()
     val crafts by viewModel.crafts.collectAsState()
     val context = LocalContext.current
+    val currentLanguage by langViewModel.currentLanguage.collectAsState()
 
     // Диалогови прозорци
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -48,12 +50,11 @@ fun MainScreen(
         }
     }
 
-    // Следим текущия маршрут за заглавието и бутоните
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Динамично заглавие
-    val topBarTitle = when {
+    // --- ЛОГИКА ЗА ПРЕВОД НА ДИНАМИЧНОТО ЗАГЛАВИЕ ---
+    val rawTitle = when {
         currentRoute == "mode_selection" -> {
             if (isLoggedIn && !username.isNullOrBlank()) "Здравей, $username!"
             else "Старинни занаяти"
@@ -66,20 +67,40 @@ fun MainScreen(
             crafts.find { it.id == craftId }?.translations?.get("bg")?.name ?: "Детайли"
         }
         currentRoute?.startsWith("quiz/") == true -> "Тест за занаят"
+        currentRoute == "leaderboard" -> "Класация"
         else -> "Старинни занаяти"
     }
 
-    // Екранна логика (Диалози)
+    var translatedTitle by remember { mutableStateOf(rawTitle) }
+    LaunchedEffect(currentLanguage, rawTitle) {
+        translatedTitle = langViewModel.translate(rawTitle)
+    }
+
+    // --- ПРЕВОД НА ТЕКСТОВЕ В ДИАЛОЗИТЕ ---
+    var exitTitle by remember { mutableStateOf("Изход") }
+    var exitMsg by remember { mutableStateOf("Сигурни ли сте, че искате да затворите приложението?") }
+    var logoutTitle by remember { mutableStateOf("Изход от профила") }
+    var yesText by remember { mutableStateOf("Да") }
+    var noText by remember { mutableStateOf("Не") }
+
+    LaunchedEffect(currentLanguage) {
+        exitTitle = langViewModel.translate("Изход")
+        exitMsg = langViewModel.translate("Сигурни ли сте, че искате да затворите приложението?")
+        logoutTitle = langViewModel.translate("Изход от профила")
+        yesText = langViewModel.translate("Да")
+        noText = langViewModel.translate("Не")
+    }
+
     if (showExitAppDialog) {
         AlertDialog(
             onDismissRequest = { showExitAppDialog = false },
-            title = { Text("Изход") },
-            text = { Text("Сигурни ли сте, че искате да затворите приложението?") },
+            title = { Text(exitTitle) },
+            text = { Text(exitMsg) },
             confirmButton = {
-                TextButton(onClick = { (context as? Activity)?.finish() }) { Text("Да") }
+                TextButton(onClick = { (context as? Activity)?.finish() }) { Text(yesText) }
             },
             dismissButton = {
-                TextButton(onClick = { showExitAppDialog = false }) { Text("Не") }
+                TextButton(onClick = { showExitAppDialog = false }) { Text(noText) }
             }
         )
     }
@@ -87,16 +108,16 @@ fun MainScreen(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Изход от профила") },
-            text = { Text("Сигурни ли сте, че искате да напуснете профила си?") },
+            title = { Text(logoutTitle) },
+            text = { Text(exitMsg) }, // Използваме същия въпрос за потвърждение
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog = false
                     onLogoutClick()
-                }) { Text("Да", color = MaterialTheme.colorScheme.error) }
+                }) { Text(yesText, color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) { Text("Не") }
+                TextButton(onClick = { showLogoutDialog = false }) { Text(noText) }
             }
         )
     }
@@ -104,7 +125,7 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(topBarTitle) },
+                title = { Text(translatedTitle) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -119,7 +140,6 @@ fun MainScreen(
                     }
                 },
                 actions = {
-                    // Бутон за AR Скенер в TopBar
                     IconButton(onClick = onArScannerClick) {
                         Icon(Icons.Default.CameraAlt, contentDescription = "AR Скенер")
                     }
@@ -143,7 +163,6 @@ fun MainScreen(
             )
         },
         floatingActionButton = {
-            // Пулсиращ бутон за скенера на началните екрани
             if (currentRoute == "mode_selection" || currentRoute == "list") {
                 FloatingActionButton(
                     onClick = onArScannerClick,
@@ -162,19 +181,23 @@ fun MainScreen(
         ) {
             composable("mode_selection") {
                 ModeSelectionScreen(
+                    langViewModel = langViewModel,
                     onSelectList = { navController.navigate("list") },
                     onSelectMap = { navController.navigate("map") }
                 )
             }
 
             composable("list") {
+                // ПРЕДАЙ langViewModel ТУК (Увери се, че CraftListScreen го приема!)
                 CraftListScreen(
+                    langViewModel = langViewModel,
                     onCraftClick = { craft -> navController.navigate("detail/${craft.id}") }
                 )
             }
 
             composable("map") {
                 MapScreen(
+                    langViewModel = langViewModel,
                     onCraftClick = { craft -> navController.navigate("detail/${craft.id}") }
                 )
             }
@@ -188,6 +211,7 @@ fun MainScreen(
                 craft?.let {
                     CraftDetailScreen(
                         craft = it,
+                        langViewModel = langViewModel, // 2. ПРЕДАВАМЕ ГО НА ДЕТАЙЛИТЕ
                         onBack = { navController.popBackStack() },
                         onShowOnMap = { navController.navigate("map_single/${it.id}") },
                         onStartQuiz = { navController.navigate("quiz/${it.id}") }
@@ -202,6 +226,7 @@ fun MainScreen(
                 val craftId = backStackEntry.arguments?.getLong("craftId")
                 MapScreen(
                     showOnlyCraftId = craftId,
+                    langViewModel = langViewModel,
                     onCraftClick = { craft -> navController.navigate("detail/${craft.id}") }
                 )
             }
@@ -215,6 +240,7 @@ fun MainScreen(
                 craft?.let {
                     QuizScreen(
                         craft = it,
+                        langViewModel = langViewModel, // 3. ПРЕДАВАМЕ ГО НА ТЕСТА
                         onBack = { navController.popBackStack() },
                         isLoggedIn = isLoggedIn,
                         userId = null
@@ -223,7 +249,10 @@ fun MainScreen(
             }
 
             composable("leaderboard") {
-                LeaderboardScreen(onBack = { navController.popBackStack() })
+                LeaderboardScreen(
+                    onBack = { navController.popBackStack() },
+                    langViewModel = langViewModel // 4. ПРЕДАВАМЕ ГО НА КЛАСАЦИЯТА
+                )
             }
         }
     }

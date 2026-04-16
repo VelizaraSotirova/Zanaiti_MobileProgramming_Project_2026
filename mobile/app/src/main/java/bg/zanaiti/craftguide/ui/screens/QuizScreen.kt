@@ -12,11 +12,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import bg.zanaiti.craftguide.models.Craft
 import bg.zanaiti.craftguide.ui.QuizViewModel
 import bg.zanaiti.craftguide.ui.QuizViewModelFactory
+import androidx.compose.runtime.collectAsState
+import bg.zanaiti.craftguide.ui.LanguageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuizScreen(
     craft: Craft,
+    langViewModel: LanguageViewModel,
     onBack: () -> Unit,
     isLoggedIn: Boolean = false,
     userId: Long? = null

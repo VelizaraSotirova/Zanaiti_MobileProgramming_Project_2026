@@ -1,5 +1,3 @@
-import com.android.build.api.dsl.AaptOptions
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -21,10 +19,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    aaptOptions {
-        noCompress("tflite")
     }
 
     buildTypes {
@@ -135,13 +129,9 @@ dependencies {
     implementation("com.google.mlkit:image-labeling:17.0.7")
     implementation("com.google.mlkit:image-labeling-custom:17.0.1")
     implementation("com.google.android.gms:play-services-mlkit-image-labeling:16.0.8")
-    //implementation("com.google.ar:core:1.33.0")
-    //implementation("com.google.ar.sceneform.ux:sceneform-ux:1.17.1")
 
-    // TensorFlow Lite библиотеки (за да спре да дава грешка в Model.java)
-//    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-//    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4")
-//    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("com.google.mlkit:translate:17.0.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

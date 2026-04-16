@@ -46,7 +46,6 @@ public class AuthService {
 
 
     public LoginResponse register(UserCreateDto createDto) {
-        // 1. ПРОВЕРКА ПРЕДИ СЪЗДАВАНЕ (За да избегнем 500 Error)
         if (userService.existsByEmail(createDto.getEmail())) {
             throw new DataIntegrityViolationException("Имейл адресът вече е регистриран");
         }
@@ -54,10 +53,10 @@ public class AuthService {
             throw new DataIntegrityViolationException("Потребителското име вече е заето");
         }
 
-        // 2. Създаване на потребителя (вече е безопасно)
+
         UserDto user = userService.createUser(createDto);
 
-        // Код за токена
+
         CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(user.getUsername());
         String token = jwtService.generateToken(userDetails);
 

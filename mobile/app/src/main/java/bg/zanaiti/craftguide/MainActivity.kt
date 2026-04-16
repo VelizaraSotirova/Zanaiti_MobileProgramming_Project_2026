@@ -2,7 +2,6 @@ package bg.zanaiti.craftguide
 
 import android.Manifest
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +20,7 @@ import bg.zanaiti.craftguide.network.RetrofitClient
 import bg.zanaiti.craftguide.ui.AuthViewModel
 import bg.zanaiti.craftguide.ui.AuthViewModelFactory
 import bg.zanaiti.craftguide.ui.CraftViewModel
+import bg.zanaiti.craftguide.ui.LanguageViewModel
 import bg.zanaiti.craftguide.ui.screens.*
 import bg.zanaiti.craftguide.ui.theme.CraftGuideTheme
 import bg.zanaiti.craftguide.utils.TokenManager
@@ -32,7 +32,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Инициализация на TokenManager и RetrofitClient
         val tokenManager = TokenManager(this)
         RetrofitClient.initialize(tokenManager)
 
@@ -54,6 +53,10 @@ class MainActivity : ComponentActivity() {
 fun CraftApp(viewModel: CraftViewModel = viewModel()) {
     val navController = rememberNavController()
     val context = LocalContext.current
+
+    // ВАЖНО: Тук създаваме споделения езиков модел
+    val langViewModel: LanguageViewModel = viewModel()
+
     val tokenManager = remember { TokenManager(context) }
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(tokenManager)
@@ -62,7 +65,6 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
     val username by authViewModel.username.collectAsState()
     val crafts by viewModel.crafts.collectAsState()
 
-    // Състояние за локацията (за картата)
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     NavHost(
@@ -74,7 +76,8 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
             WelcomeScreen(
                 onStartClick = {
                     navController.navigate("main")
-                }
+                },
+                langViewModel = langViewModel
             )
         }
 
@@ -82,6 +85,7 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
         composable("main") {
             MainScreen(
                 viewModel = viewModel,
+                langViewModel = langViewModel,
                 startDestination = "mode_selection",
                 isLoggedIn = isAuthenticated,
                 username = username,
@@ -95,7 +99,6 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
                 onLogoutClick = {
                     authViewModel.logout()
                 },
-                // ДОБАВИ ТОЗИ РЕД ТУК:
                 onArScannerClick = {
                     navController.navigate("ar_scanner")
                 }
@@ -106,6 +109,7 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
         composable("auth") {
             AuthScreen(
                 tokenManager = tokenManager,
+                langViewModel = langViewModel,
                 onAuthSuccess = {
                     navController.popBackStack()
                     navController.navigate("main")
@@ -118,7 +122,8 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
             val currentUserId by authViewModel.userId.collectAsState()
             ProfileScreen(
                 userId = currentUserId ?: 0L,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                langViewModel = langViewModel
             )
         }
 
@@ -132,6 +137,7 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
             craft?.let {
                 CraftDetailScreen(
                     craft = it,
+                    langViewModel = langViewModel,
                     onBack = { navController.popBackStack() },
                     onShowOnMap = {
                         navController.navigate("map_single/${it.id}")
@@ -145,20 +151,10 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
 
         // ==================== AR СКЕНЕР ====================
         composable("ar_scanner") {
-            DisposableEffect(Unit) {
-                Log.d("AR_DEBUG", "AR Scanner Screen ENTERED")
-                onDispose {
-                    Log.d("AR_DEBUG", "AR Scanner Screen EXITED/DISPOSED")
-                }
-            }
-
             ARScannerScreen(
                 onObjectDetected = { detectedName ->
-                    Log.d("AR_DEBUG", "Object detected: $detectedName")
-                    // Търсим в българските преводи ("bg")
                     val craft = crafts.find { craftItem ->
                         val bgTranslation = craftItem.translations["bg"]
-                        // Проверяваме дали името (напр. "Чипровски килим") съдържа "килим"
                         bgTranslation?.name?.contains(detectedName, ignoreCase = true) == true
                     }
 
@@ -168,7 +164,9 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
                         }
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                langViewModel = langViewModel
+
             )
         }
 
@@ -179,7 +177,8 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
                 showOnlyCraftId = craftId,
                 onCraftClick = { craft ->
                     navController.navigate("detail/${craft.id}")
-                }
+                },
+                langViewModel = langViewModel
             )
         }
 
@@ -193,6 +192,7 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
             craft?.let {
                 QuizScreen(
                     craft = it,
+                    langViewModel = langViewModel,
                     onBack = { navController.popBackStack() },
                     isLoggedIn = isAuthenticated,
                     userId = authViewModel.userId.value
@@ -203,7 +203,8 @@ fun CraftApp(viewModel: CraftViewModel = viewModel()) {
         // ==================== LEADERBOARD ====================
         composable("leaderboard") {
             LeaderboardScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                langViewModel = langViewModel
             )
         }
     }

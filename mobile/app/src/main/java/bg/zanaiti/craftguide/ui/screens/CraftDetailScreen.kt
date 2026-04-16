@@ -9,11 +9,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.viewmodel.compose.viewModel
 import bg.zanaiti.craftguide.models.Craft
+import bg.zanaiti.craftguide.ui.LanguageViewModel
 import coil.compose.AsyncImage
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -22,18 +25,47 @@ import com.google.android.exoplayer2.ui.PlayerView
 @Composable
 fun CraftDetailScreen(
     craft: Craft,
+    langViewModel: LanguageViewModel,
     onBack: () -> Unit,
     onShowOnMap: () -> Unit,
     onStartQuiz: () -> Unit
 ) {
-    val translation = craft.translations["bg"]!!
+    val currentLanguage by langViewModel.currentLanguage.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Използваме MutableState за плейъра
+    // Базови текстове от обекта
+    val baseName = craft.translations["bg"]?.name ?: ""
+    val baseDesc = craft.translations["bg"]?.description ?: ""
+    val baseHistory = craft.translations["bg"]?.historicalFacts ?: ""
+    val baseProcess = craft.translations["bg"]?.makingProcess ?: ""
+
+    // Състояния за преведените текстове
+    var tName by remember { mutableStateOf(baseName) }
+    var tDesc by remember { mutableStateOf(baseDesc) }
+    var tHistoryLabel by remember { mutableStateOf("📜 Исторически факти:") }
+    var tHistoryText by remember { mutableStateOf(baseHistory) }
+    var tProcessLabel by remember { mutableStateOf("⚒️ Процес на изработка:") }
+    var tProcessText by remember { mutableStateOf(baseProcess) }
+    var tVideoLabel by remember { mutableStateOf("🎬 Виж как се прави:") }
+    var tMapBtn by remember { mutableStateOf("🗺️ Виж на картата") }
+    var tQuizBtn by remember { mutableStateOf("❓ Започни Quiz") }
+
+    LaunchedEffect(currentLanguage) {
+        tName = langViewModel.translate(baseName)
+        tDesc = langViewModel.translate(baseDesc)
+        tHistoryText = langViewModel.translate(baseHistory)
+        tProcessText = langViewModel.translate(baseProcess)
+
+        tHistoryLabel = "📜 " + langViewModel.translate("Исторически факти:")
+        tProcessLabel = "⚒️ " + langViewModel.translate("Процес на изработка:")
+        tVideoLabel = "🎬 " + langViewModel.translate("Виж как се прави:")
+        tMapBtn = "🗺️ " + langViewModel.translate("Виж на картата")
+        tQuizBtn = "❓ " + langViewModel.translate("Започни Quiz")
+    }
+
     var exoPlayer by remember { mutableStateOf<ExoPlayer?>(null) }
 
-    // 1. Инициализация на ExoPlayer
     LaunchedEffect(craft.animationUrl) {
         if (!craft.animationUrl.isNullOrBlank()) {
             val player = ExoPlayer.Builder(context).build().apply {
@@ -45,105 +77,56 @@ fun CraftDetailScreen(
         }
     }
 
-    // 2. LIFECYCLE OBSERVER - оправя забавянето на видеото
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            // Когато потребителят натисне "Назад", Lifecycle преминава през ON_PAUSE
             if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
                 exoPlayer?.stop()
                 exoPlayer?.release()
                 exoPlayer = null
             }
         }
-
         lifecycleOwner.lifecycle.addObserver(observer)
-
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            exoPlayer?.stop()
             exoPlayer?.release()
-            exoPlayer = null
         }
     }
 
-    // Основно съдържание (без Scaffold, защото той е в MainScreen)
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Изображение на занаята
         AsyncImage(
             model = craft.imageUrl,
-            contentDescription = translation.name,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp),
+            contentDescription = tName,
+            modifier = Modifier.fillMaxWidth().height(220.dp),
             contentScale = ContentScale.Crop
         )
 
-        // Описание
-        Text(
-            text = translation.description,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Text(text = tDesc, style = MaterialTheme.typography.bodyLarge)
 
-        // Исторически факти
-        Text(text = "📜 Исторически факти:", style = MaterialTheme.typography.titleMedium)
-        Text(text = translation.historicalFacts, style = MaterialTheme.typography.bodyMedium)
+        Text(text = tHistoryLabel, style = MaterialTheme.typography.titleMedium)
+        Text(text = tHistoryText, style = MaterialTheme.typography.bodyMedium)
 
-        // Процес на изработка
-        Text(text = "⚒️ Процес на изработка:", style = MaterialTheme.typography.titleMedium)
-        Text(text = translation.makingProcess, style = MaterialTheme.typography.bodyMedium)
+        Text(text = tProcessLabel, style = MaterialTheme.typography.titleMedium)
+        Text(text = tProcessText, style = MaterialTheme.typography.bodyMedium)
 
-        // Видео секция (само ако има зареден плейър)
-        if (exoPlayer != null && !craft.animationUrl.isNullOrBlank()) {
-            Text(text = "🎬 Виж как се прави:", style = MaterialTheme.typography.titleMedium)
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                AndroidView(
-                    factory = { ctx ->
-                        PlayerView(ctx).apply {
-                            player = exoPlayer
-                            useController = true
-                            // Правим фона прозрачен, за да няма "черни проблясъци" при затваряне
-                            setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
-                            layoutParams = android.view.ViewGroup.LayoutParams(
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+        if (exoPlayer != null) {
+            Text(text = tVideoLabel, style = MaterialTheme.typography.titleMedium)
+            Card(modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
+                AndroidView(factory = { ctx ->
+                    PlayerView(ctx).apply { player = exoPlayer }
+                }, modifier = Modifier.fillMaxSize())
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Бутони за действие
-        Button(
-            onClick = onShowOnMap,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-        ) {
-            Text("🗺️ Виж на картата")
+        Button(onClick = onShowOnMap, modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
+            Text(tMapBtn)
         }
 
-        Button(
-            onClick = onStartQuiz,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("❓ Започни Quiz")
+        Button(onClick = onStartQuiz, modifier = Modifier.fillMaxWidth()) {
+            Text(tQuizBtn)
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }

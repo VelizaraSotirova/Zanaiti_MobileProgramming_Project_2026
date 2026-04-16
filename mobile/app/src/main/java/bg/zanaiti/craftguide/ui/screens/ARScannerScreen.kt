@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import bg.zanaiti.craftguide.ui.LanguageViewModel
 import com.google.accompanist.permissions.*
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.ObjectDetection
@@ -27,19 +28,38 @@ import java.util.concurrent.Executors
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ARScannerScreen(
+    langViewModel: LanguageViewModel,
     onObjectDetected: (String) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
+    val currentLanguage by langViewModel.currentLanguage.collectAsState()
 
     var isDetected by remember { mutableStateOf(false) }
     var isAnalyzing by remember { mutableStateOf(false) }
     var isScanning by remember { mutableStateOf(false) }
-    var statusText by remember { mutableStateOf("Натиснете бутона за сканиране") }
+
+    // Динамични текстове
+    var statusText by remember { mutableStateOf("") }
+    var tTitle by remember { mutableStateOf("") }
+    var tScanBtn by remember { mutableStateOf("") }
+    var tBack by remember { mutableStateOf("") }
+    var tPermissionMsg by remember { mutableStateOf("") }
+    var tPermissionBtn by remember { mutableStateOf("") }
+
+    // Използваме LaunchedEffect за първоначален превод и при смяна на езика
+    LaunchedEffect(currentLanguage) {
+        tTitle = langViewModel.translate("AR Скенер")
+        tScanBtn = langViewModel.translate("🔍 Сканирай")
+        tBack = langViewModel.translate("Назад")
+        tPermissionMsg = langViewModel.translate("📷 Нужен е достъп до камерата")
+        tPermissionBtn = langViewModel.translate("Дайте разрешение")
+        statusText = langViewModel.translate("Натиснете бутона за сканиране")
+    }
+
     var detectionCount by remember { mutableStateOf(0) }
-    var lastDetectedCraft by remember { mutableStateOf<String?>(null) }
     var showDetectionCard by remember { mutableStateOf(false) }
 
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
@@ -50,11 +70,11 @@ fun ARScannerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("📷 Нужен е достъп до камерата")
+            Text(tPermissionMsg)
             Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
-                Text("Дайте разрешение")
+                Text(tPermissionBtn)
             }
-            Button(onClick = onBack) { Text("Назад") }
+            Button(onClick = onBack) { Text(tBack) }
         }
         return
     }
@@ -64,180 +84,115 @@ fun ARScannerScreen(
         .build()
     val objectDetector = ObjectDetection.getClient(options)
 
-    fun detectCraftByShape(width: Int, height: Int, aspectRatio: Float): String? {
-        val isRound = abs(aspectRatio - 1f) < 0.4f
-        val isLarge = width > 150 && height > 150
-        return if (isRound && isLarge) "Грънчарство" else null
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("AR Скенер") },
+                title = { Text(tTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Text("←") }
                 }
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             AndroidView(
                 factory = { ctx ->
                     val previewView = PreviewView(ctx)
                     val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-
                     cameraProviderFuture.addListener({
                         val cameraProvider = cameraProviderFuture.get()
                         val preview = Preview.Builder().build()
                         preview.setSurfaceProvider(previewView.surfaceProvider)
-
                         val imageAnalysis = ImageAnalysis.Builder()
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                             .build()
 
-                        imageAnalysis.setAnalyzer(
-                            Executors.newSingleThreadExecutor()
-                        ) { imageProxy ->
+                        imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
                             if (!isAnalyzing && isScanning && !isDetected) {
                                 isAnalyzing = true
                                 val mediaImage = imageProxy.image
                                 if (mediaImage != null) {
-                                    val inputImage = InputImage.fromMediaImage(
-                                        mediaImage,
-                                        imageProxy.imageInfo.rotationDegrees
-                                    )
+                                    val inputImage = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
                                     objectDetector.process(inputImage)
                                         .addOnSuccessListener { objects ->
                                             if (objects.isNotEmpty()) {
-                                                val largest = objects.maxByOrNull {
-                                                    it.boundingBox.width() * it.boundingBox.height()
-                                                }
+                                                val largest = objects.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
                                                 largest?.let { obj ->
                                                     val width = obj.boundingBox.width()
                                                     val height = obj.boundingBox.height()
-                                                    val screenArea = imageProxy.width * imageProxy.height
-                                                    val objectArea = width * height
                                                     val aspectRatio = width.toFloat() / height.toFloat()
-
-                                                    if (objectArea > screenArea * 0.25) {
-                                                        val craftType = detectCraftByShape(width, height, aspectRatio)
+                                                    if ((width * height) > (imageProxy.width * imageProxy.height * 0.25)) {
+                                                        val craftType = if (abs(aspectRatio - 1f) < 0.4f && width > 150) "Грънчарство" else null
                                                         if (craftType != null) {
                                                             detectionCount++
                                                             if (detectionCount >= 3) {
-                                                                if (lastDetectedCraft == craftType) {
-                                                                    isDetected = true
-                                                                    isScanning = false
-                                                                    statusText = "✅ Разпознато гювече!"
-                                                                    lastDetectedCraft = craftType
+                                                                isDetected = true
+                                                                isScanning = false
 
-                                                                    coroutineScope.launch {
-                                                                        showDetectionCard = true
-                                                                        delay(1500)
-                                                                        showDetectionCard = false
-                                                                        onObjectDetected(craftType)
-                                                                    }
+                                                                // Тук използваме coroutineScope, защото сме в Listener (не-suspend среда)
+                                                                coroutineScope.launch {
+                                                                    statusText = langViewModel.translate("✅ Разпознато гювече!")
+                                                                    showDetectionCard = true
+                                                                    delay(1500)
+                                                                    onObjectDetected(craftType)
                                                                 }
                                                             } else {
-                                                                lastDetectedCraft = craftType
-                                                                statusText = "🔍 Разпознавам... ($detectionCount/3)"
+                                                                coroutineScope.launch {
+                                                                    val recognitionMsg = langViewModel.translate("🔍 Разпознавам...")
+                                                                    statusText = "$recognitionMsg ($detectionCount/3)"
+                                                                }
                                                             }
                                                         } else {
-                                                            detectionCount = 0
-                                                            statusText = "📷 Приближете гювечето"
+                                                            coroutineScope.launch {
+                                                                statusText = langViewModel.translate("📷 Приближете гювечето")
+                                                            }
                                                         }
-                                                    } else {
-                                                        detectionCount = 0
-                                                        statusText = "📷 Приближете гювечето"
                                                     }
                                                 }
                                             } else {
-                                                detectionCount = 0
-                                                statusText = "🔍 Търся гювече..."
+                                                coroutineScope.launch {
+                                                    statusText = langViewModel.translate("🔍 Търся гювече...")
+                                                }
                                             }
                                         }
-                                        .addOnCompleteListener {
-                                            isAnalyzing = false
-                                            imageProxy.close()
-                                        }
-                                } else {
-                                    imageProxy.close()
-                                    isAnalyzing = false
-                                }
-                            } else {
-                                imageProxy.close()
-                            }
+                                        .addOnCompleteListener { isAnalyzing = false; imageProxy.close() }
+                                } else { imageProxy.close(); isAnalyzing = false }
+                            } else { imageProxy.close() }
                         }
-
-                        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-                        cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageAnalysis
-                        )
+                        cameraProvider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageAnalysis)
                     }, ContextCompat.getMainExecutor(context))
-
                     previewView
                 },
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Долен панел
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Text(
-                        text = statusText,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+            Column(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f), shape = MaterialTheme.shapes.medium) {
+                    Text(text = statusText, modifier = Modifier.padding(16.dp))
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Button(
                     onClick = {
                         isScanning = true
                         detectionCount = 0
-                        statusText = "Сканирам... Насочете към гювече"
+                        coroutineScope.launch {
+                            statusText = langViewModel.translate("Сканирам...")
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
                 ) {
-                    Text("🔍 Сканирай")
+                    Text(tScanBtn)
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = onBack) {
-                    Text("Назад")
-                }
+                Button(onClick = onBack) { Text(tBack) }
             }
 
             if (showDetectionCard) {
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    elevation = CardDefaults.cardElevation(8.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("🎉 Разпознат занаят! 🎉", style = MaterialTheme.typography.titleLarge)
-                        Text("Това е свързано с грънчарството.")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("⏳ Пренасочване след момент...", style = MaterialTheme.typography.bodySmall)
+                Card(modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(16.dp)) {
+                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        // Тъй като това са статични стрингове в Card, по-добре да ги преведем в LaunchedEffect по-горе
+                        // или директно тук с LaunchedEffect(craftType) ако се сменя
+                        Text(tTitle, style = MaterialTheme.typography.titleLarge)
+                        Text(statusText)
                     }
                 }
             }

@@ -10,19 +10,24 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bg.zanaiti.craftguide.ui.AuthViewModel
 import bg.zanaiti.craftguide.ui.AuthViewModelFactory
+import bg.zanaiti.craftguide.ui.LanguageViewModel
 import bg.zanaiti.craftguide.utils.TokenManager
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(
     tokenManager: TokenManager,
+    langViewModel: LanguageViewModel, // Вече е разпознат
     onAuthSuccess: () -> Unit
 ) {
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(tokenManager)
     )
+    val coroutineScope = rememberCoroutineScope()
     val isLoading by authViewModel.isLoading.collectAsState()
     val error by authViewModel.error.collectAsState()
+    val currentLanguage by langViewModel.currentLanguage.collectAsState()
 
     var isLoginMode by remember { mutableStateOf(true) }
     var username by remember { mutableStateOf("") }
@@ -30,10 +35,34 @@ fun AuthScreen(
     var password by remember { mutableStateOf("") }
     var fullName by remember { mutableStateOf("") }
 
+    // Текстове за превод
+    var tTitle by remember { mutableStateOf("") }
+    var tUserLabel by remember { mutableStateOf("") }
+    var tPassLabel by remember { mutableStateOf("") }
+    var tEmailLabel by remember { mutableStateOf("") }
+    var tFullNameLabel by remember { mutableStateOf("") }
+    var tErrorMsg by remember { mutableStateOf("") }
+    var tToggleMode by remember { mutableStateOf("") }
+
+    // LaunchedEffect за сигурно извикване на suspend функцията translate
+    LaunchedEffect(currentLanguage, isLoginMode, error) {
+        tTitle = langViewModel.translate(if (isLoginMode) "Вход" else "Регистрация")
+        tUserLabel = langViewModel.translate("Потребителско име")
+        tPassLabel = langViewModel.translate("Парола")
+        tEmailLabel = langViewModel.translate("Имейл")
+        tFullNameLabel = langViewModel.translate("Пълно име")
+        tToggleMode = langViewModel.translate(
+            if (isLoginMode) "Нямаш акаунт? Регистрирай се" else "Вече имаш акаунт? Влез"
+        )
+        error?.let {
+            tErrorMsg = langViewModel.translate(it)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isLoginMode) "Вход" else "Регистрация") }
+                title = { Text(tTitle) }
             )
         }
     ) { paddingValues ->
@@ -48,7 +77,7 @@ fun AuthScreen(
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Потребителско име") },
+                label = { Text(tUserLabel) },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -56,14 +85,14 @@ fun AuthScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Имейл") },
+                    label = { Text(tEmailLabel) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
-                    label = { Text("Пълно име") },
+                    label = { Text(tFullNameLabel) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -71,7 +100,7 @@ fun AuthScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Парола") },
+                label = { Text(tPassLabel) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -95,14 +124,14 @@ fun AuthScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (isLoginMode) "Вход" else "Регистрация")
+                    Text(tTitle)
                 }
             }
 
-            error?.let {
+            if (error != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = it,
+                    text = tErrorMsg,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -113,7 +142,7 @@ fun AuthScreen(
             TextButton(
                 onClick = { isLoginMode = !isLoginMode }
             ) {
-                Text(if (isLoginMode) "Нямаш акаунт? Регистрирай се" else "Вече имаш акаунт? Влез")
+                Text(tToggleMode)
             }
         }
     }
