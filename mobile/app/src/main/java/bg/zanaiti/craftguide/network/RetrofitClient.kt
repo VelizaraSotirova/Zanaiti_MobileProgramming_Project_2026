@@ -24,10 +24,17 @@ object RetrofitClient {
     // Интерцептор за JWT токен
     private val authInterceptor = Interceptor { chain ->
         val token = if (::tokenManager.isInitialized) tokenManager.getToken() else null
+
+        android.util.Log.d("AuthInterceptor", "Token is ${if (token != null) "present (${token.take(20)}...)" else "NULL"}")
+
+
         val requestBuilder = chain.request().newBuilder()
 
         if (!token.isNullOrBlank()) {
             requestBuilder.header("Authorization", "Bearer $token")
+            android.util.Log.d("AuthInterceptor", "Added Authorization header")
+        } else {
+            android.util.Log.d("AuthInterceptor", "No token - request will be unauthorized")
         }
         chain.proceed(requestBuilder.build())
     }
@@ -38,9 +45,9 @@ object RetrofitClient {
 
     private val client by lazy {
         OkHttpClient.Builder()
-            .addInterceptor(authInterceptor) // ← ТОВА ЛИПСВАШЕ!
+            .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.HEADERS // HEADERS е по-добре за дебъг на токени
+                level = HttpLoggingInterceptor.Level.HEADERS // HEADERS - за дебъг на токени
             })
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
@@ -49,7 +56,7 @@ object RetrofitClient {
 
     private val retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl("http://192.168.1.6:8080/")   // ← 10.0.2.2 = localhost за емулатора / IPv4 = телефон
+            .baseUrl("http://192.168.0.3:8080/")   // ← 10.0.2.2 = localhost за емулатора / IPv4 = телефон
             .client(client)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()

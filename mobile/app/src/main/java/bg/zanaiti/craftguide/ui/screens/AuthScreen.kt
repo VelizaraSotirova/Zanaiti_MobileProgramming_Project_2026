@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AuthScreen(
     tokenManager: TokenManager,
-    langViewModel: LanguageViewModel, // Вече е разпознат
+    langViewModel: LanguageViewModel,
     onAuthSuccess: () -> Unit
 ) {
     val authViewModel: AuthViewModel = viewModel(

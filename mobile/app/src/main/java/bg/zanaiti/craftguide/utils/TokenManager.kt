@@ -21,6 +21,11 @@ class TokenManager(private val context: Context) {
         private val USER_ID_KEY = stringPreferencesKey("user_id")
     }
 
+    // Кеш в паметта
+    private var cachedToken: String? = null
+    private var cachedUsername: String? = null
+    private var cachedUserId: Long? = null
+
     val tokenFlow: Flow<String?> = context.dataStore.data
         .map { preferences ->
             preferences[TOKEN_KEY]
@@ -41,7 +46,9 @@ class TokenManager(private val context: Context) {
             preferences[USER_ID_KEY] = id.toString()
         }
     }
+
     suspend fun saveToken(token: String) {
+        cachedToken = token
         context.dataStore.edit { preferences ->
             preferences[TOKEN_KEY] = token
         }
@@ -53,11 +60,8 @@ class TokenManager(private val context: Context) {
         }
     }
 
-    // За синхронно взимане на токена (за интерцептора)
     fun getToken(): String? {
-        return runBlocking {
-            tokenFlow.first()
-        }
+        return cachedToken
     }
 
     fun getUsername(): String? {
@@ -73,10 +77,19 @@ class TokenManager(private val context: Context) {
     }
 
     suspend fun clearToken() {
+        cachedToken = null
+        cachedUsername = null
+        cachedUserId = null
         context.dataStore.edit { preferences ->
             preferences.remove(TOKEN_KEY)
             preferences.remove(USERNAME_KEY)
             preferences.remove(USER_ID_KEY)
         }
+    }
+
+    suspend fun loadTokenFromStorage() {
+        cachedToken = tokenFlow.first()
+        cachedUsername = usernameFlow.first()
+        cachedUserId = userIdFlow.first()
     }
 }

@@ -1,6 +1,6 @@
 package bg.zanaiti.zanaiti_api.controller.user;
 
-import bg.zanaiti.zanaiti_api.dto.LeaderboardEntryDto;
+import bg.zanaiti.zanaiti_api.dto.Leaderboard.LeaderboardEntryDto;
 import bg.zanaiti.zanaiti_api.dto.UserProgressDto.UserProgressDto;
 import bg.zanaiti.zanaiti_api.dto.UserProgressDto.UserProgressSummaryDto;
 import bg.zanaiti.zanaiti_api.security.CustomUserDetails;

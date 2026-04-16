@@ -1,6 +1,6 @@
 package bg.zanaiti.zanaiti_api.service.user;
 
-import bg.zanaiti.zanaiti_api.dto.LeaderboardEntryDto;
+import bg.zanaiti.zanaiti_api.dto.Leaderboard.LeaderboardEntryDto;
 import bg.zanaiti.zanaiti_api.dto.UserProgressDto.UserProgressDto;
 import bg.zanaiti.zanaiti_api.dto.UserProgressDto.UserProgressSummaryDto;
 import bg.zanaiti.zanaiti_api.model.*;
@@ -141,10 +141,16 @@ public class UserProgressService {
     }
 
     private UserProgressDto convertToDto(UserProgress progress) {
+//        String craftName = progress.getCraft().getTranslations().stream()
+//                .findFirst()
+//                .map(CraftTranslation::getName)
+//                .orElse("Unknown");
+
         String craftName = progress.getCraft().getTranslations().stream()
+                .filter(t -> "bg".equals(t.getLanguage().getCode()))
                 .findFirst()
                 .map(CraftTranslation::getName)
-                .orElse("Unknown");
+                .orElse("Unknown Craft");
 
         return UserProgressDto.builder()
                 .id(progress.getId())

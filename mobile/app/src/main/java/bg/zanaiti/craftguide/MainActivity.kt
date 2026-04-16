@@ -10,6 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -26,6 +27,7 @@ import bg.zanaiti.craftguide.ui.theme.CraftGuideTheme
 import bg.zanaiti.craftguide.utils.TokenManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 class MainActivity : ComponentActivity() {
@@ -33,6 +35,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val tokenManager = TokenManager(this)
+        lifecycleScope.launch {
+            tokenManager.loadTokenFromStorage()
+            android.util.Log.d("MainActivity", "Token after load: ${if (tokenManager != null) "present" else "NULL"}")
+        }
         RetrofitClient.initialize(tokenManager)
 
         setContent {

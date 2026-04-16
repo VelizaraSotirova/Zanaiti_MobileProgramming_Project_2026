@@ -23,7 +23,7 @@ import bg.zanaiti.craftguide.ui.LanguageViewModel
 @Composable
 fun MainScreen(
     viewModel: CraftViewModel,
-    langViewModel: LanguageViewModel, // 1. Добавен параметър
+    langViewModel: LanguageViewModel,
     startDestination: String = "mode_selection",
     isLoggedIn: Boolean,
     username: String? = null,
@@ -188,7 +188,6 @@ fun MainScreen(
             }
 
             composable("list") {
-                // ПРЕДАЙ langViewModel ТУК (Увери се, че CraftListScreen го приема!)
                 CraftListScreen(
                     langViewModel = langViewModel,
                     onCraftClick = { craft -> navController.navigate("detail/${craft.id}") }
@@ -211,7 +210,7 @@ fun MainScreen(
                 craft?.let {
                     CraftDetailScreen(
                         craft = it,
-                        langViewModel = langViewModel, // 2. ПРЕДАВАМЕ ГО НА ДЕТАЙЛИТЕ
+                        langViewModel = langViewModel,
                         onBack = { navController.popBackStack() },
                         onShowOnMap = { navController.navigate("map_single/${it.id}") },
                         onStartQuiz = { navController.navigate("quiz/${it.id}") }
@@ -240,7 +239,7 @@ fun MainScreen(
                 craft?.let {
                     QuizScreen(
                         craft = it,
-                        langViewModel = langViewModel, // 3. ПРЕДАВАМЕ ГО НА ТЕСТА
+                        langViewModel = langViewModel,
                         onBack = { navController.popBackStack() },
                         isLoggedIn = isLoggedIn,
                         userId = null
@@ -251,7 +250,7 @@ fun MainScreen(
             composable("leaderboard") {
                 LeaderboardScreen(
                     onBack = { navController.popBackStack() },
-                    langViewModel = langViewModel // 4. ПРЕДАВАМЕ ГО НА КЛАСАЦИЯТА
+                    langViewModel = langViewModel
                 )
             }
         }

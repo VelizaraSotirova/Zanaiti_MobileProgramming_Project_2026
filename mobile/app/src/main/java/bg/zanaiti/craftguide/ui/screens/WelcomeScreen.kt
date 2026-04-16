@@ -22,7 +22,7 @@ import com.google.mlkit.nl.translate.TranslateLanguage
 @Composable
 fun WelcomeScreen(
     onStartClick: () -> Unit,
-    langViewModel: LanguageViewModel // ПРИЕМАМЕ СПОДЕЛЕНИЯ МОДЕЛ
+    langViewModel: LanguageViewModel
 ) {
     // 1. Свързваме се със състоянието на езика и прогреса на теглене
     val currentLanguage by langViewModel.currentLanguage.collectAsState()
@@ -85,7 +85,7 @@ fun WelcomeScreen(
             }
 
             Text(
-                text = titleText, // Използваме пременливата за превод
+                text = titleText,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
@@ -96,7 +96,7 @@ fun WelcomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = subtitleText, // Използваме пременливата за превод
+                text = subtitleText,
                 fontSize = 16.sp,
                 color = Color.White.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center
@@ -113,7 +113,7 @@ fun WelcomeScreen(
                 shape = MaterialTheme.shapes.medium
             ) {
                 Text(
-                    text = buttonText, // Използваме пременливата за превод
+                    text = buttonText,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
                 )

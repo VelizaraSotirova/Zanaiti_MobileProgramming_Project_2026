@@ -1,4 +1,4 @@
-package bg.zanaiti.zanaiti_api.dto;
+package bg.zanaiti.zanaiti_api.dto.Leaderboard;
 
 import lombok.*;
 

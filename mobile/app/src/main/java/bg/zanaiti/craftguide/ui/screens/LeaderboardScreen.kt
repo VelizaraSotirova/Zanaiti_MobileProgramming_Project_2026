@@ -34,7 +34,7 @@ fun LeaderboardScreen(
         tPointsSuffix = if (currentLanguage == "bg") "т." else "pts"
     }
 
-    // Scaffold без topBar, защото ползваш общия от MainContainer
+
     Scaffold { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when {
