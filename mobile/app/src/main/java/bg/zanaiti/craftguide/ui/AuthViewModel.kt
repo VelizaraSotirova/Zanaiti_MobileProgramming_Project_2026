@@ -139,6 +139,7 @@ class AuthViewModel(
             tokenManager.clearToken()
             _isAuthenticated.value = false
             _username.value = null
+            _userId.value = null
         }
     }
 }

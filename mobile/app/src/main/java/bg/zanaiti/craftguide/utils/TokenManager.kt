@@ -48,6 +48,7 @@ class TokenManager(private val context: Context) {
     }
 
     suspend fun saveToken(token: String) {
+        println("🔄 TokenManager: Saving new token for user")
         cachedToken = token
         context.dataStore.edit { preferences ->
             preferences[TOKEN_KEY] = token

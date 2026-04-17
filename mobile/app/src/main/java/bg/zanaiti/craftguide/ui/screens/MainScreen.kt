@@ -140,6 +140,8 @@ fun MainScreen(
                     }
                 },
                 actions = {
+                    LanguageSelector(langViewModel)
+
                     IconButton(onClick = onArScannerClick) {
                         Icon(Icons.Default.CameraAlt, contentDescription = "AR Скенер")
                     }
@@ -251,6 +253,48 @@ fun MainScreen(
                 LeaderboardScreen(
                     onBack = { navController.popBackStack() },
                     langViewModel = langViewModel
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LanguageSelector(langViewModel: LanguageViewModel) {
+    var expanded by remember { mutableStateOf(false) }
+    val currentLanguage by langViewModel.currentLanguage.collectAsState()
+
+    // Дефинираме поддържаните езици
+    val languages = listOf(
+        "bg" to "Български",
+        "en" to "English",
+        "de" to "Deutsch"
+    )
+
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Default.Language, // Икона кълбо
+                contentDescription = "Смяна на езика"
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            languages.forEach { (code, name) ->
+                DropdownMenuItem(
+                    text = { Text(name) },
+                    onClick = {
+                        langViewModel.setLanguage(code)
+                        expanded = false
+                    },
+                    leadingIcon = {
+                        if (currentLanguage == code) {
+                            Icon(Icons.Default.Check, contentDescription = null)
+                        }
+                    }
                 )
             }
         }
