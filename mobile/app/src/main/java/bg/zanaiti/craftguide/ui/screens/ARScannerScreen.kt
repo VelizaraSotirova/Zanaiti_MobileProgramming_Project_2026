@@ -189,8 +189,6 @@ fun ARScannerScreen(
             if (showDetectionCard) {
                 Card(modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(16.dp)) {
                     Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        // Тъй като това са статични стрингове в Card, по-добре да ги преведем в LaunchedEffect по-горе
-                        // или директно тук с LaunchedEffect(craftType) ако се сменя
                         Text(tTitle, style = MaterialTheme.typography.titleLarge)
                         Text(statusText)
                     }

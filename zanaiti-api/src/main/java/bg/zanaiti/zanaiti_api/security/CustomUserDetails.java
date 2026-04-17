@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;  // композиция - съдържаме user, не сме user
+    private final User user;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -27,7 +27,7 @@ class TranslationManager {
         return try {
             // Уверяваме се, че моделът е свален преди превод
             val conditions = DownloadConditions.Builder()
-                .requireWifi() // Може да се промени, ако искаш и през мобилни данни
+                .requireWifi()
                 .build()
 
             translator.downloadModelIfNeeded(conditions).await()
