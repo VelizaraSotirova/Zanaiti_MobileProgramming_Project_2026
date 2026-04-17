@@ -35,10 +35,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val tokenManager = TokenManager(this)
-        lifecycleScope.launch {
-            tokenManager.loadTokenFromStorage()
-            android.util.Log.d("MainActivity", "Token after load: ${if (tokenManager != null) "present" else "NULL"}")
-        }
         RetrofitClient.initialize(tokenManager)
 
         setContent {
