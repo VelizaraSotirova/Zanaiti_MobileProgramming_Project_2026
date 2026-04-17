@@ -115,6 +115,7 @@ class AuthViewModel(
                 )
                 tokenManager.saveToken(response.token)
                 tokenManager.saveUsername(response.username)
+                tokenManager.saveUserId(response.id)
                 _isAuthenticated.value = true
                 _username.value = response.username
                 _userId.value = response.id
