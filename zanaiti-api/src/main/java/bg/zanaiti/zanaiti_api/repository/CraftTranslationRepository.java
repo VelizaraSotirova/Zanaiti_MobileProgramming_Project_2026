@@ -11,7 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface CraftTranslationRepository extends JpaRepository<CraftTranslation, Long> {
-    //Optional<CraftTranslation> findByCraftIdAndLanguageCode(Long craftId, String languageCode);
     @Query("SELECT ct FROM CraftTranslation ct WHERE ct.craft.id = :craftId AND ct.language.code = :languageCode")
     Optional<CraftTranslation> findByCraftIdAndLanguageCode(@Param("craftId") Long craftId, @Param("languageCode") String languageCode);
     boolean existsByNameAndLanguageCode(String name, String languageCode);

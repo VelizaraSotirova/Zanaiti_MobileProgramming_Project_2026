@@ -11,7 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface QuizQuestionTranslationRepository extends JpaRepository<QuizQuestionTranslation, Long> {
-    //Optional<QuizQuestionTranslation> findByQuizQuestionIdAndLanguageCode(Long questionId, String languageCode);
     @Query("SELECT qt FROM QuizQuestionTranslation qt WHERE qt.quizQuestion.id = :questionId AND qt.language.code = :languageCode")
     Optional<QuizQuestionTranslation> findByQuizQuestionIdAndLanguageCode(@Param("questionId") Long questionId, @Param("languageCode") String languageCode);
 

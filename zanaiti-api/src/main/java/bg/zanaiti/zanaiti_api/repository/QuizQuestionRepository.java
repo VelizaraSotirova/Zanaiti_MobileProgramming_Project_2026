@@ -10,9 +10,7 @@ import java.util.List;
 
 @Repository
 public interface QuizQuestionRepository extends JpaRepository<QuizQuestion, Long> {
-    // All questions for a craft
-    //List<QuizQuestion> findByCraftId(Long craftId);
-    // Only the active ones
+    // Only the active questions for a craft
     List<QuizQuestion> findByCraftIdAndIsActiveTrue(Long craftId);
 
     // Translated to the chosen language

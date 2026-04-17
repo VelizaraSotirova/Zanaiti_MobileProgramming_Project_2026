@@ -196,9 +196,7 @@ public class UserService {
         return convertToDto(user);
     }
 
-    /**
-     * Конвертира Entity към DTO
-     */
+
     public UserDto convertToDto(User user) {
         Set<String> roleNames = user.getRoles() != null ?
                 user.getRoles().stream()
