@@ -131,7 +131,7 @@ fun ARScannerScreen(
 
                                                                 // Тук използваме coroutineScope, защото сме в Listener (не-suspend среда)
                                                                 coroutineScope.launch {
-                                                                    statusText = langViewModel.translate("✅ Разпознато гювече!")
+                                                                    statusText = langViewModel.translate("✅ Разпознато грънчарство!")
                                                                     showDetectionCard = true
                                                                     delay(1500)
                                                                     onObjectDetected(craftType)
@@ -144,14 +144,14 @@ fun ARScannerScreen(
                                                             }
                                                         } else {
                                                             coroutineScope.launch {
-                                                                statusText = langViewModel.translate("📷 Приближете гювечето")
+                                                                statusText = langViewModel.translate("📷 Приближете изделието")
                                                             }
                                                         }
                                                     }
                                                 }
                                             } else {
                                                 coroutineScope.launch {
-                                                    statusText = langViewModel.translate("🔍 Търся гювече...")
+                                                    statusText = langViewModel.translate("🔍 Търся изделие...")
                                                 }
                                             }
                                         }

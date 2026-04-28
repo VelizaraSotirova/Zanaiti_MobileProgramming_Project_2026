@@ -31,6 +31,7 @@ object RetrofitClient {
         val requestBuilder = chain.request().newBuilder()
 
         if (!token.isNullOrBlank()) {
+            // автоматично добавя хедър Authorization: Bearer <token> към заявката
             requestBuilder.header("Authorization", "Bearer $token")
             android.util.Log.d("AuthInterceptor", "Added Authorization header")
         } else {
@@ -56,7 +57,7 @@ object RetrofitClient {
 
     private val retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl("http://192.168.0.3:8080/")   // ← 10.0.2.2 = localhost за емулатора / IPv4 = телефон
+            .baseUrl("http://192.168.0.4:8080/")   // ← 10.0.2.2 = localhost за емулатора / IPv4 = телефон
             .client(client)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
