@@ -1,0 +1,30 @@
+@startuml
+actor User
+
+participant "Compose UI" as UI
+participant "ViewModel" as VM
+participant "Retrofit API" as API
+participant "Controller" as Controller
+participant "Service Layer" as Service
+participant "Repository" as Repo
+database "Database" as DB
+
+User -> UI : User action (click / navigation)
+UI -> VM : Trigger event
+VM -> API : HTTP Request (JSON + JWT)
+
+API -> Controller : REST call
+Controller -> Service : Process request
+Service -> Repo : Fetch / Save data
+Repo -> DB : Query
+
+DB --> Repo : Result
+Repo --> Service : Data
+Service --> Controller : Response DTO
+Controller --> API : JSON Response
+
+API --> VM : Response
+VM --> UI : State update (Flow)
+UI --> User : Updated screen
+
+@enduml

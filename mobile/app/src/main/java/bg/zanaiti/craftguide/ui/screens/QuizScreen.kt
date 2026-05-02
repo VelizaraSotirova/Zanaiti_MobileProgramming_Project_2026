@@ -24,8 +24,10 @@ fun QuizScreen(
     isLoggedIn: Boolean = false,
     userId: Long? = null
 ) {
+    val currentLanguage by langViewModel.currentLanguage.collectAsState()
+
     val viewModel: QuizViewModel = viewModel(
-        factory = QuizViewModelFactory(isLoggedIn, userId, craft.id)
+        factory = QuizViewModelFactory(isLoggedIn, userId, craft.id, "bg")
     )
 
     val questions by viewModel.questions.collectAsState()
@@ -36,6 +38,43 @@ fun QuizScreen(
     val selectedOption by viewModel.selectedOption.collectAsState()
     val feedback by viewModel.feedback.collectAsState()
     val correctCount by viewModel.correctCount.collectAsState()
+
+    // Държатели за преведените текстове (UI State)
+    var tQuestionText by remember { mutableStateOf("") }
+    var tOptions by remember { mutableStateOf(listOf("", "", "", "")) }
+    var tConfirmBtn by remember { mutableStateOf("") }
+    var tFeedbackMsg by remember { mutableStateOf("") }
+    var tQuestionInfo by remember { mutableStateOf("") }
+    var tScoreLabel by remember { mutableStateOf("") }
+
+    // Основен Ефект: Превежда въпроса и опциите при смяна на индекс или език
+    LaunchedEffect(questions, currentIndex, currentLanguage) {
+        if (questions.isNotEmpty()) {
+            val currentQuestion = questions[currentIndex]
+            val base = currentQuestion.translations["bg"]!!
+
+            // Превеждаме заглавната информация
+            tQuestionInfo = langViewModel.translate("Въпрос ${currentIndex + 1} от ${questions.size}")
+            tScoreLabel = langViewModel.translate("⭐ Точки: $score")
+            tConfirmBtn = langViewModel.translate("Потвърди")
+
+            // Превеждаме самия въпрос и неговите опции
+            tQuestionText = langViewModel.translate(base.questionText)
+            tOptions = listOf(
+                langViewModel.translate(base.optionA),
+                langViewModel.translate(base.optionB),
+                langViewModel.translate(base.optionC),
+                langViewModel.translate(base.optionD)
+            )
+        }
+    }
+
+    // Ефект за превод на обратната връзка (Браво/Грешка)
+    LaunchedEffect(feedback, currentLanguage) {
+        feedback?.let {
+            tFeedbackMsg = langViewModel.translate(it)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -54,6 +93,7 @@ fun QuizScreen(
                     score = score,
                     totalQuestions = questions.size,
                     correctAnswers = correctCount,
+                    langViewModel = langViewModel, // Подаваме го и тук за финалния екран
                     onBack = {
                         viewModel.reset()
                         onBack()
@@ -61,28 +101,19 @@ fun QuizScreen(
                 )
             }
             questions.isNotEmpty() -> {
-                val question = questions[currentIndex]
-                val translation = question.translations["bg"]!!
-
                 // Прогрес и точки
-                Text(
-                    text = "Въпрос ${currentIndex + 1} от ${questions.size}",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "⭐ Точки: $score",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Text(text = tQuestionInfo, style = MaterialTheme.typography.titleMedium)
+                Text(text = tScoreLabel, style = MaterialTheme.typography.bodyLarge)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Въпрос
+                // Карта с въпроса
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     Text(
-                        text = translation.questionText,
+                        text = tQuestionText,
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.titleLarge
                     )
@@ -90,15 +121,8 @@ fun QuizScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Опции
-                val options = listOf(
-                    translation.optionA,
-                    translation.optionB,
-                    translation.optionC,
-                    translation.optionD
-                )
-
-                options.forEachIndexed { index, option ->
+                // Опции за отговор
+                tOptions.forEachIndexed { index, option ->
                     Button(
                         onClick = { viewModel.selectOption(index) },
                         modifier = Modifier.fillMaxWidth(),
@@ -120,14 +144,14 @@ fun QuizScreen(
                         onClick = { viewModel.submitAnswer() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Потвърди")
+                        Text(tConfirmBtn)
                     }
                 }
 
                 // Съобщение за обратна връзка
                 feedback?.let {
                     Text(
-                        text = it,
+                        text = tFeedbackMsg,
                         color = if (it.contains("Bravo") || it.contains("Правилно"))
                             MaterialTheme.colorScheme.primary
                         else
@@ -145,32 +169,37 @@ fun QuizResultScreen(
     score: Int,
     totalQuestions: Int,
     correctAnswers: Int,
+    langViewModel: LanguageViewModel,
     onBack: () -> Unit
 ) {
+    val currentLanguage by langViewModel.currentLanguage.collectAsState()
+    var tFinished by remember { mutableStateOf("") }
+    var tCorrect by remember { mutableStateOf("") }
+    var tPoints by remember { mutableStateOf("") }
+    var tBackBtn by remember { mutableStateOf("") }
+
+    LaunchedEffect(currentLanguage) {
+        tFinished = langViewModel.translate("🏆 Тест завършен! 🏆")
+        tCorrect = langViewModel.translate("Верни отговори: $correctAnswers / $totalQuestions")
+        tPoints = langViewModel.translate("Спечелени точки: $score")
+        tBackBtn = langViewModel.translate("Назад към детайлите")
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "🏆 Тест завършен! 🏆",
-            style = MaterialTheme.typography.headlineSmall
-        )
+        Text(text = tFinished, style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "Верни отговори: $correctAnswers / $totalQuestions",
-            style = MaterialTheme.typography.titleLarge
-        )
-        Text(
-            text = "Спечелени точки: $score",
-            style = MaterialTheme.typography.titleLarge
-        )
+        Text(text = tCorrect, style = MaterialTheme.typography.titleLarge)
+        Text(text = tPoints, style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(32.dp))
         Button(
             onClick = onBack,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
         ) {
-            Text("Назад към детайлите")
+            Text(tBackBtn)
         }
     }
 }

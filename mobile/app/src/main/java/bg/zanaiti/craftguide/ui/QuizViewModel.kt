@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 class QuizViewModel(
     private val isLoggedIn: Boolean = false,
     private val userId: Long? = null,
-    private val craftId: Long
+    private val craftId: Long,
+    private val lang: String,
 ) : ViewModel() {
 
     private val _questions = MutableStateFlow<List<QuizQuestion>>(emptyList())
