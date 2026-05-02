@@ -64,7 +64,7 @@ public class JwtService {
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith((javax.crypto.SecretKey) key) // ← нов синтаксис за 0.12.6
+                    .verifyWith((javax.crypto.SecretKey) key)
                     .build()
                     .parseSignedClaims(token);
             return true;
@@ -82,22 +82,10 @@ public class JwtService {
         return false;
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .verifyWith((javax.crypto.SecretKey) key) // ← new syntax for 0.12.6
+                .verifyWith((javax.crypto.SecretKey) key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

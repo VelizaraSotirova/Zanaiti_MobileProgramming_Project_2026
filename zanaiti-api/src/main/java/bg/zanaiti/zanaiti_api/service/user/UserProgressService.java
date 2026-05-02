@@ -141,11 +141,6 @@ public class UserProgressService {
     }
 
     private UserProgressDto convertToDto(UserProgress progress) {
-//        String craftName = progress.getCraft().getTranslations().stream()
-//                .findFirst()
-//                .map(CraftTranslation::getName)
-//                .orElse("Unknown");
-
         String craftName = progress.getCraft().getTranslations().stream()
                 .filter(t -> "bg".equals(t.getLanguage().getCode()))
                 .findFirst()

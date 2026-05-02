@@ -24,13 +24,9 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Създава нов потребител.
-     * Валидацията за дублиращи се данни вече е минала в AuthService.
-     */
+
     @Transactional
     public UserDto createUser(UserCreateDto createDto) {
-        // Намираме ролята USER. Ако я няма, хвърляме грешка (това е системен проблем).
         Role userRole = roleRepository.findByName("USER")
                 .orElseThrow(() -> new RuntimeException("Грешка: Ролята USER не е намерена в базата данни!"));
 
@@ -49,12 +45,10 @@ public class UserService {
         return convertToDto(savedUser);
     }
 
-    // Използва се в AuthService за проверка преди регистрация
+    // Използват се в AuthService за проверка преди регистрация
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
-
-    // Използва се в AuthService за проверка преди регистрация
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
@@ -63,13 +57,6 @@ public class UserService {
     public UserDto getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Потребителят не е намерен: " + username));
-        return convertToDto(user);
-    }
-
-    // Използва се от други услуги (напр. ProfileService)
-    public UserDto getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Потребител с ID " + id + " не е намерен"));
         return convertToDto(user);
     }
 
